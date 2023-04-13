@@ -1,4 +1,4 @@
-## raw and dirty pre-alpfa version - use at own risk
+## raw and dirty pre-alpha version - use at own risk
 
 ### Backend installation/setup and running
 
