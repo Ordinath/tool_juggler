@@ -34,20 +34,26 @@ venv\Scripts\activate
 `pip install -r requirements.txt`
 
 the fun part - replace broken code in langchain library (to properly recognize chat model stream end):
-`cd venv/lib/python3.10/site-packages/langchain/chat_models`
+
+```cd venv/lib/python3.10/site-packages/langchain/chat_models```
+
 open base.py and replace the following code:
+
 ```
 return self._generate(messages, stop=stop).generations[0].message # line 128
 ```
+
 with
+
 ```
 output = self._generate(messages, stop=stop)
 self.callback_manager.on_llm_end(output, verbose=self.verbose)
 return output.generations[0].message
 ```
 
+to launch:
 
-`python app.py`
+```python app.py```
 
 This should launch backend on [http://localhost:5005](http://localhost:5005)
 
@@ -60,8 +66,10 @@ NEXT_PUBLIC_OPENAI_API_URL=https://api.openai.com/v1/chat/completions
 NEXT_PUBLIC_PY_BACKEND_API_URL=http://localhost:5005
 ```
 
-`cd frontend`
-`npm install`
-`npm run dev`
+```cd frontend```
+
+```npm install```
+
+```npm run dev```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the chat page.
