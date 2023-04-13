@@ -1,0 +1,12 @@
+node_modules/*
+*.bundle.js
+*.config.js
+*.min.js
+*.css
+*.html
+*.xml
+*.md
+*.txt
+*.csv
+*.json
+*.ftl

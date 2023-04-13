@@ -1,0 +1,14 @@
+@keyframes squeeze {
+    0%,
+    100% {
+      transform: scaleY(1);
+    }
+    50% {
+      transform: scaleY(0.6);
+    }
+  }
+  
+  .squeeze {
+    animation: squeeze 1s infinite;
+    color: red;
+  }
