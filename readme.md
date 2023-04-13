@@ -17,9 +17,11 @@ NS_REALM={for netsuite related stuff}
 ```
 
 install dependencies:
-`cd backend`
-`python --version` # should be 3.10.10
-`python -m venv venv`
+```cd backend```
+
+```python --version # should be 3.10.10 ```
+
+```python -m venv venv```
 
 ```
 # Linux/macOS
