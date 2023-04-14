@@ -1,5 +1,40 @@
 ## raw and dirty pre-alpha version - use at own risk
 
+### High-level goals from the top of the head:
+
+#### 1. Refactor Backend app.py
+- Extract tools functionality into dedicated 'common' and 'internal' folders
+- Ensure 'internal' folder is gitignored
+- Move common tools (simple Python functions with metadata) to the 'common' folder
+- Refactoring and logic extraction of other functionality from app.py into dedicated files
+
+#### 2. Add Message frontend CRUD support Functionality
+- Implement message editing and deletion on the frontend (all types of messages)
+
+#### 3. On-demand Embeddings for Conversations
+- Add functionality to create embeddings for specific conversations from a frontend request
+- Store embeddings in a vector base
+- Indicate conversations with embeddings on the frontend
+- Add common tooling to pull the previous conversation memory into scope on demand
+- Addition of time awareness 
+
+#### 4. Frontend Control of Enabled/Disabled Tools
+- Create a lower left sidebar section to display available tools
+- Have tool table (with all relevant info) in local SQLite database
+- Enable/disable tools based on frontend application state upon ai completion requests
+- Send enabled tools with AI completion requests to the backend
+
+#### 5. Attachments and File Handling
+- Enable attaching pictures and files (PDF/DOC/etc) to conversations
+- Discuss architectural decisions for handling attachments on frontend
+- Determine how to embed or supply attachments to tools as context
+- make common tooling to get pictures from DALL-e upon query
+
+#### 6. Plugin and Tool Juggler Functionality
+- Implement capability to supply backend AI with tooling from chat (JSON with all required data)
+- Create dedicated tool for adding other tools on the fly
+- Plan architectural decisions for this epic level task 
+
 ### Backend installation/setup and running
 
 this was tested and ran on python 3.10.10, both 3.11 and 3.09 had issues with the langchain and chroma libraries installations.
