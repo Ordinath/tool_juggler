@@ -35,6 +35,8 @@
 - Create dedicated tool for adding other tools on the fly
 - Plan architectural decisions for this epic level task 
 
+## Installation and Prerequisites
+
 ### Backend installation/setup and running
 
 this was tested and ran on python 3.10.10, both 3.11 and 3.09 had issues with the langchain and chroma libraries installations.
