@@ -12,6 +12,10 @@
 #### Add Message frontend CRUD support Functionality
 - Implement message editing and deletion on the frontend (all types of messages)
 
+#### AI Response Processing Steps Indication
+- Indicate AI processing steps on frontend when sending AI completion request
+- Display stages such as "AI is thinking", "AI is using this tool", "AI is observing something", and "AI is preparing the final answer"
+
 #### Improve Final Awnser parsing with proper regex
 - Make code blocks properly rendered on frontend
 - Potentially implement token buffer for proper handling of frontend rendering via streaming
@@ -28,6 +32,10 @@
 - Have tool table (with all relevant info) in local SQLite database
 - Enable/disable tools based on frontend application state upon ai completion requests
 - Send enabled tools with AI completion requests to the backend
+
+#### Frontend Refinement and Theming
+- Improve frontend appearance with padding, layout adjustments, and other visual enhancements
+- Add a theme switcher to allow users to toggle between different themes in the Next.js React application
 
 #### Attachments and File Handling
 - Enable attaching pictures and files (PDF/DOC/etc) to conversations
