@@ -34,3 +34,5 @@ yarn-error.log*
 *.ipynb
 **/*.db
 venv/
+**/tools/private/*
+**/docs/private/*

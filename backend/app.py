@@ -11,20 +11,11 @@ import re
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.base import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain.schema import (HumanMessage, AIMessage, SystemMessage,
-                              AgentAction, AgentFinish, LLMResult)
+from langchain.schema import (AgentAction, AgentFinish, LLMResult)
 from langchain.memory.chat_message_histories.in_memory import ChatMessageHistory
-from langchain.agents import ZeroShotAgent, Tool, AgentExecutor, ConversationalChatAgent
-from langchain.memory import ConversationBufferMemory, ReadOnlySharedMemory
-from langchain import OpenAI, LLMChain, PromptTemplate
-from langchain.vectorstores import Chroma
-from langchain.utilities import GoogleSearchAPIWrapper
-from requests_oauthlib import OAuth1Session
+from langchain.memory import ConversationBufferMemory
 import os
-
-import chromadb
-from chromadb.config import Settings
-from chromadb.utils import embedding_functions
+import importlib
 
 from langchain.agents import initialize_agent
 from langchain.agents import AgentType, AgentOutputParser
@@ -36,6 +27,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///conversations.db'
 db = SQLAlchemy(app)
 CORS(app)
+
 
 class ThreadedGenerator:
 
@@ -96,7 +88,7 @@ class ChainStreamHandler(StreamingStdOutCallbackHandler):
                 # self.gen.send(f"data: {encoded_text}\n\n")
                 self.gen.send("""data: """ + encoded_text.encode(
                     'latin-1', 'backslashreplace').decode('unicode-escape') +
-                              """\n\n""")
+                    """\n\n""")
 
         # sys.stdout.write(token)
         # sys.stdout.flush()
@@ -114,30 +106,6 @@ class ChainStreamHandler(StreamingStdOutCallbackHandler):
 
             encoded_done = quote("[DONE]")
             self.gen.send(f"data: {encoded_done}\n\n")
-
-    # def __init__(self, gen, assistant_message_id):
-    #     super().__init__()
-    #     self.gen = gen
-    #     self.assistant_message_id = assistant_message_id
-    #     self.ai_message = ""
-
-    # def on_llm_new_token(self, token: str, **kwargs):
-    #     # print("LLM New Token")
-    #     self.ai_message += token
-    #     encoded_text = quote(token)
-    #     self.gen.send(f"data: {encoded_text}\n\n")
-
-    # def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
-    #     # print("LLM End")
-    #     if self.ai_message and self.assistant_message_id is not None:
-    #         # Update the message with the provided ID
-    #         message_to_update = Message.query.get(self.assistant_message_id)
-    #         if message_to_update:
-    #             message_to_update.content = self.ai_message
-    #             db.session.commit()
-
-    #     encoded_done = quote("[DONE]")
-    #     self.gen.send(f"data: {encoded_done}\n\n")
 
     def on_llm_error(self, error: Union[Exception, KeyboardInterrupt],
                      **kwargs: Any) -> None:
@@ -186,23 +154,6 @@ class ChainStreamHandler(StreamingStdOutCallbackHandler):
         """Run on agent end."""
 
 
-# def llm_thread(g, messages, assistant_message_id, model):
-#     print(messages)
-#     try:
-#         chat = ChatOpenAI(
-#             model=model,
-#             verbose=True,
-#             streaming=True,
-#             callback_manager=CallbackManager(
-#                 [ChainStreamHandler(g, assistant_message_id)]),
-#             temperature=0.7,
-#         )
-#         with app.app_context():
-#             chat(messages)
-
-
-#     finally:
-#         g.close()
 class CustomOutputParser(AgentOutputParser):
 
     def parse(self, llm_output: str) -> Union[AgentAction, AgentFinish]:
@@ -229,6 +180,24 @@ class CustomOutputParser(AgentOutputParser):
                            log=llm_output)
 
 
+def discover_tools(folders):
+    tools = []
+
+    for folder in folders:
+        for filename in os.listdir(folder.replace(".", "/")):
+            if not filename.endswith(".py") or filename.startswith("__"):
+                continue
+
+            module_name = filename[:-3]
+            module_path = f"{folder}.{module_name}"
+            module = importlib.import_module(module_path)
+            tool = module.get_tool()
+            tools.extend(tool)
+
+
+    return tools
+
+
 def agent_thread(g, last_user_message, model, tools, memory,
                  assistant_message_id):
     # print(messages)
@@ -248,37 +217,12 @@ def agent_thread(g, last_user_message, model, tools, memory,
             memory=memory,
             verbose=True,
             agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
-            # agent_kwargs={"output_parser": CustomOutputParser()}
-            # callback_manager=CallbackManager(
-            #     [ChainStreamHandler(g, assistant_message_id)]),
         )
-        # biggy = AgentExecutor.from_agent_and_tools(
-        #     agent=agent,
-        #     tools=tools,
-        #     verbose=True,
-        #     # callback_manager=CallbackManager(
-        #     #     [ChainStreamHandler(g, assistant_message_id)]),
-        #     memory=memory)
-        # chat = ChatOpenAI(
-        #     model=model,
-        #     verbose=True,
-        #     streaming=True,
-        #     callback_manager=CallbackManager(
-        #         [ChainStreamHandler(g, assistant_message_id)]),
-        #     temperature=0.7,
-        # )
         with app.app_context():
             biggy.run(input=last_user_message)
 
     finally:
         g.close()
-
-
-# def chat(messages, assistant_message_id, model):
-#     g = ThreadedGenerator()
-#     threading.Thread(target=llm_thread,
-#                      args=(g, messages, assistant_message_id, model)).start()
-#     return g
 
 
 def biggy_agent(last_user_message, model, tools, memory, assistant_message_id):
@@ -427,91 +371,16 @@ def get_ai_completion(conversation_id):
                                       return_messages=True,
                                       chat_memory=message_history)
 
-    # template = """
-    # You are a helpful assistant. You are especially strong in Programming.
-    # You always consider user's request critically and try to find the best possible solution,
-    # even if you need to completely overhaul the existing solution to make it better.
-    # You always follow modern development practices and try to follow best programming principles like 
-    # KISS, DRY, YAGNI, Composition Over Inheritance, Single Responsibility, Separation of Concerns, SOLID.
-    # {input}
-    # CODE ONLY
-    # """
+    folders = ["tools.common", "tools.private"]
+    tools = discover_tools(folders)
 
-    # prompt = PromptTemplate(input_variables=["input", "chat_history"], template=template)
-    # prompt = PromptTemplate(input_variables=["input"], template=template)
-
-    # llm = ChatOpenAI(
-    #     # model='gpt-3.5-turbo',
-    #     model='gpt-4',
-    #     verbose=True,
-    #     # streaming=True,
-    #     # callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
-    #     temperature=0.7)
-
-    # programming_tool = LLMChain(
-    #     llm=llm,
-    #     prompt=prompt,
-    #     verbose=True,
-    #     # memory=readonlymemory,
-    # )
-
-    # search tool
-    search_tool = GoogleSearchAPIWrapper()
-    
-    # tools
-    tools = [
-        Tool(
-            name="Search",
-            func=search_tool.run,
-            description=
-            "useful for when you need to answer questions about current events and supply more detail about already known information. The input to this tool should be a query with a detailed explanation of what you need to know about."
-        )
-    ]
-
-    # # biggy agent
-    # prefix = """Your name is Biggy! Have a conversation with a human, answering the following questions as best you can. You have access to the following tools:"""
-    # suffix = """
-    # Use the following format:
-
-    # Question: the input question you must answer
-    # Thought: you should always think about what to do
-    # Action: the action to take, should be one of tool names
-    # Action Input: the input to the action
-    # Observation: the result of the action
-    # ... (this Thought/Action/Action Input/Observation can repeat N times)
-    # Thought: I now know the final answer
-    # Final Answer: the final answer to the original input question
-    # Begin!"
-
-    # {chat_history}
-    # Question: {input}
-    # {agent_scratchpad}"""
-
-    # prompt = ConversationalChatAgent.create_prompt(
-    #     tools,
-    #     # system_message=prefix,
-    #     # human_message=suffix,
-    #     input_variables=["input", "chat_history", "agent_scratchpad"])
-
-    # llm_chain = LLMChain(
-
-    # prompt=prompt)
-
-    # agent_chain = initialize_agent()
-
-    # agent = ConversationalChatAgent(llm_chain=llm_chain, tools=tools, verbose=True)
+    print('tools', tools)
 
     return Response(
         stream_with_context(
-            # chat(messages, assistant_message_id, model)),
             biggy_agent(last_user_message, model, tools, memory,
                         assistant_message_id)),
         content_type="text/event-stream")
-    # stream_with_context(
-    #     # chat(messages, assistant_message_id, model)),
-    #     biggy_agent(last_user_message, agent, tools, memory,
-    #                 assistant_message_id)),
-    # content_type="text/event-stream")
 
 
 if __name__ == '__main__':
