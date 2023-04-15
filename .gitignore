@@ -36,3 +36,4 @@ yarn-error.log*
 venv/
 **/tools/private/*
 **/docs/private/*
+__pycache__/
