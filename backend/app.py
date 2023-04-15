@@ -20,12 +20,14 @@ import importlib
 from langchain.agents import initialize_agent
 from langchain.agents import AgentType, AgentOutputParser
 
+from db_models import db, Conversation, Message
+
 load_dotenv()
 
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///conversations.db'
-db = SQLAlchemy(app)
+db.init_app(app)
 CORS(app)
 
 
@@ -194,7 +196,6 @@ def discover_tools(folders):
             tool = module.get_tool()
             tools.extend(tool)
 
-
     return tools
 
 
@@ -231,27 +232,6 @@ def biggy_agent(last_user_message, model, tools, memory, assistant_message_id):
                      args=(g, last_user_message, model, tools, memory,
                            assistant_message_id)).start()
     return g
-
-
-class Conversation(db.Model):
-    id = db.Column(db.String(36),
-                   primary_key=True,
-                   default=lambda: str(uuid.uuid4()))
-    title = db.Column(db.String(255), nullable=False)
-    model = db.Column(db.String(50), nullable=True)
-    messages = db.relationship('Message', backref='conversation', lazy=True)
-
-
-class Message(db.Model):
-    id = db.Column(db.String(36),
-                   primary_key=True,
-                   default=lambda: str(uuid.uuid4()))
-    sender = db.Column(db.String(50), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.String(255), nullable=False)
-    conversation_id = db.Column(db.String(36),
-                                db.ForeignKey('conversation.id'),
-                                nullable=False)
 
 
 @app.route('/conversations', methods=['GET', 'POST'])
