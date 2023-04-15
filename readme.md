@@ -14,7 +14,7 @@
 
 #### Improve Final Awnser parsing with proper regex
 - Make code blocks properly rendered on frontend
-- potentially implement toker buffer for pretty handling of frontend rendering
+- Potentially implement token buffer for proper handling of frontend rendering via streaming
 
 #### On-demand Embeddings for Conversations
 - Add functionality to create embeddings for specific conversations from a frontend request
