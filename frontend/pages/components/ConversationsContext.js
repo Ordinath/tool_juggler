@@ -107,7 +107,7 @@ export function ConversationProvider({ children }) {
 
             let newAssistantMessage = await API.createMessage(selectedConversation, 'assistant', '\n', new Date().toISOString());
             setInStreamAssistantMessage(newAssistantMessage);
-            const endpoint = `${API_URL}/conversations/${selectedConversation}/getAICompletion`;
+            const endpoint = `${API_URL}/conversations/${selectedConversation}/get_ai_completion`;
             const streamHandler = new StreamHandler({
                 model: 'gpt-4', // 'gpt-3.5-turbo', 'gpt-4'
                 // model: 'gpt-3.5-turbo', // 'gpt-3.5-turbo', 'gpt-4'
