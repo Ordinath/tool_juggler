@@ -1,52 +1,10 @@
 ## raw and dirty pre-alpha version - use at own risk
 
+## https://discord.gg/qzTwvKkc
+
 ### High-level goals from the top of the head:
 
-#### Refactor Backend app.py
-- Extract tools functionality into dedicated 'common' and 'internal' folders
-- Ensure 'internal' folder is gitignored
-- Move common tools (simple Python functions with metadata) to the 'common' folder
-- Refactoring and logic extraction of other functionality from app.py into dedicated files
-- Make ai responce endpoint to properly consume stream parameter for backend decoupling
-
-#### Add Message frontend CRUD support Functionality
-- Implement message editing and deletion on the frontend (all types of messages)
-
-#### AI Response Processing Steps Indication
-- Indicate AI processing steps on frontend when sending AI completion request
-- Display stages such as "AI is thinking", "AI is using this tool", "AI is observing something", and "AI is preparing the final answer"
-
-#### Improve Final Awnser parsing with proper regex
-- Make code blocks properly rendered on frontend
-- Potentially implement token buffer for proper handling of frontend rendering via streaming
-
-#### On-demand Embeddings for Conversations
-- Add functionality to create embeddings for specific conversations from a frontend request
-- Store embeddings in a vector base
-- Indicate conversations with embeddings on the frontend
-- Add common tooling to pull the previous conversation memory into scope on demand
-- Addition of time awareness 
-
-#### Frontend Control of Enabled/Disabled Tools
-- Create a lower left sidebar section to display available tools
-- Have tool table (with all relevant info) in local SQLite database
-- Enable/disable tools based on frontend application state upon ai completion requests
-- Send enabled tools with AI completion requests to the backend
-
-#### Frontend Refinement and Theming
-- Improve frontend appearance with padding, layout adjustments, and other visual enhancements
-- Add a theme switcher to allow users to toggle between different themes in the Next.js React application
-
-#### Attachments and File Handling
-- Enable attaching pictures and files (PDF/DOC/etc) to conversations
-- Discuss architectural decisions for handling attachments on frontend
-- Determine how to embed or supply attachments to tools as context
-- make common tooling to get pictures from DALL-e upon query
-
-#### Plugin and Tool Juggler Functionality
-- Implement capability to supply backend AI with tooling from chat (JSON with all required data)
-- Create dedicated tool for adding other tools on the fly
-- Plan architectural decisions for this epic level task 
+#### Created as issues under new Tool Juggler Project
 
 ## Installation and Prerequisites
 
