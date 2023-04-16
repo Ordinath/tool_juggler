@@ -116,7 +116,6 @@ export function ConversationProvider({ children }) {
                 onMessage: (text, streamText) => {
                     // console.log('onMessage:', { text, streamText });
                     setInStreamAssistantMessage({ ...newAssistantMessage, content: streamText });
-
                 },
                 onFinish: async (streamText) => {
                     // console.log('Stream finished:', streamText);
@@ -130,6 +129,14 @@ export function ConversationProvider({ children }) {
             });
             streamHandler.start();
         }
+    };
+
+    const handleDeleteMessage = async (messageId) => {
+        console.log('delete message', messageId);
+        await API.deleteMessage(messageId);
+        // refresh messages
+        let fetchedConversation = await API.getConversation(selectedConversation);
+        setSelectedConversationMessages(fetchedConversation.messages);
     };
 
     const value = {
@@ -147,6 +154,7 @@ export function ConversationProvider({ children }) {
         handleDeleteConversation,
         handleChangeConversationTitle,
         handleSendMessage,
+        handleDeleteMessage,
     };
 
     return <ConversationsContext.Provider value={value}>{children}</ConversationsContext.Provider>;

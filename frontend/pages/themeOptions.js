@@ -119,7 +119,7 @@ const themeOptions = {
         },
     },
     shape: {
-        borderRadius: 0,
+        borderRadius: 4,
     },
     spacing: 8,
 };
