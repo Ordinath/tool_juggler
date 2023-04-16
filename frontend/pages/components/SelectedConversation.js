@@ -15,7 +15,7 @@ export default function SelectedConversation() {
             conversation.scrollTop = conversation.scrollHeight;
         }
     }, [inStreamAssistantMessage]);
-    
+
     return (
         <Box className="conversation" sx={{ flexGrow: 1, overflowY: 'auto', paddingBottom: '1rem', paddingRight: '1rem' }}>
             {!conversationLoading &&
@@ -25,7 +25,13 @@ export default function SelectedConversation() {
                     return <Message key={message.id} message={message} />;
                 })}
             {!conversationLoading && selectedConversation && inStreamAssistantMessage && (
-                <Message key={inStreamAssistantMessage.id} message={inStreamAssistantMessage} />
+                <Message
+                    key={inStreamAssistantMessage.id}
+                    message={inStreamAssistantMessage}
+                    sx={{
+                        paddingBottom: '1rem',
+                    }}
+                />
             )}
         </Box>
     );

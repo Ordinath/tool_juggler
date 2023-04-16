@@ -15,7 +15,6 @@ import Box from '@mui/material/Box';
 const darkTheme = createTheme(themeOptions);
 
 export default function Home() {
-
     return (
         <>
             <ConversationProvider>
@@ -38,11 +37,23 @@ export default function Home() {
                                 gap=".5rem"
                                 padding=".5rem"
                                 height="100%"
-                                sx={{ overflowY: 'auto' }}
+                                sx={{ overflowY: 'auto', backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
                             >
                                 <ConversationList {...{}} />
                             </Box>
-                            <Box display="flex" flexDirection="column" className="content-container" width="100%" gap=".5rem" padding=".5rem">
+                            <Box
+                                display="flex"
+                                flexDirection="column"
+                                className="content-container"
+                                width="100%"
+                                gap=".5rem"
+                                padding=".5rem"
+                                sx={{
+                                    marginX: '5rem',
+                                    marginY: '2rem',
+                                    // backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                                }}
+                            >
                                 <SelectedConversation {...{}} />
                                 <UserInput {...{}} />
                             </Box>

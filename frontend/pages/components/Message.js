@@ -1,20 +1,40 @@
+import { useState } from 'react';
 import { styled, alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import { IconButton } from '@mui/material';
 import FileCopyIcon from '@mui/icons-material/FileCopyOutlined';
 import ReactMarkdown from 'react-markdown';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import MessageActions from './MessageActions';
+import { useConversations } from './ConversationsContext';
 // import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 // import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-const MessageBox = styled(Box)(({ theme }) => ({
+const MessageBox = styled(Box)(({ hascontent, theme }) => ({
+    position: 'relative',
     borderRadius: theme.shape.borderRadius,
     // padding: theme.spacing(3),
     marginBottom: theme.spacing(1),
     paddingLeft: theme.spacing(2.5),
     paddingRight: theme.spacing(2.5),
+    paddingTop: theme.spacing(2),
+    paddingBottom: hascontent === 'true' ? theme.spacing(0) : theme.spacing(3),
     wordBreak: 'break-word',
     wordWrap: 'break-word',
+}));
+
+const EditBox = styled(OutlinedInput)(({ editmode, selected, confirmdelete, theme }) => ({
+    '& .MuiInputBase-input.Mui-disabled': {
+        WebkitTextFillColor: undefined,
+    },
+    // paddingTop: theme.spacing(2),
+    // marginBottom: theme.spacing(1),
+    // paddingLeft: theme.spacing(2.5),
+    // paddingRight: theme.spacing(2.5),
+    paddingTop: theme.spacing(2),
+    // marginBottom: theme.spacing(0.1),
+    // border: confirmdelete === 'true' ? `.0875rem solid ${theme.palette.error.main}` : `.0875rem solid ${theme.palette.primary.main}`,
+    // backgroundColor: confirmdelete === 'true' ? alpha(theme.palette.error.main, 0.3) : alpha(theme.palette.secondary.main, 0.3),
 }));
 
 const SystemMessage = styled(MessageBox)(({ theme }) => ({
@@ -22,12 +42,12 @@ const SystemMessage = styled(MessageBox)(({ theme }) => ({
     border: `1px solid ${theme.palette.info.main}`,
 }));
 
-const UserMessage = styled(MessageBox)(({ theme }) => ({
+const UserMessage = styled(MessageBox)(({ hascontent, theme }) => ({
     background: alpha(theme.palette.primary.dark, 0.3),
     border: `1px solid ${alpha(theme.palette.secondary.main, 0.9)}`,
 }));
 
-const AssistantMessage = styled(MessageBox)(({ theme }) => ({
+const AssistantMessage = styled(MessageBox)(({ hascontent, theme }) => ({
     background: alpha(theme.palette.secondary.dark, 0.3),
     border: `1px solid ${alpha(theme.palette.primary.main, 0.9)}`,
 }));
@@ -94,21 +114,89 @@ const handleCopyToClipboard = (text) => {
 
 export default function Message({ message }) {
     const messageTextStyle = { wordWrap: 'break-word', overflowWrap: 'break-word' };
+
+    const { handleEditMessage } = useConversations();
+
+    // track the state of message edit status and message edit content
+    const [isEditing, setIsEditing] = useState(false);
+    const [editContent, setEditContent] = useState(message.content);
+
+    const handleMessageEnableEdit = () => {
+        setIsEditing(true);
+    };
+
+    const handleMessageEditConfirm = () => {
+        setIsEditing(false);
+        handleEditMessage(message.id, editContent);
+    };
+
+    const handleMessageEditCancel = () => {
+        setIsEditing(false);
+    };
+
     return (
         <Box key={message.id}>
-            {message.sender === 'system' && (
+            {/* {message.sender === 'system' && (
                 <SystemMessage className="system-message" width="100%">
                     <ReactMarkdown style={messageTextStyle} children={message.content} components={renderedComponents} />
                 </SystemMessage>
-            )}
+            )} */}
             {message.sender === 'user' && (
-                <UserMessage className="user-message" width="100%">
-                    <ReactMarkdown style={messageTextStyle} children={message.content} components={renderedComponents} />
+                <UserMessage className="user-message" width="100%" hascontent={`${message.content.trim().length !== 0}`}>
+                    <MessageActions
+                        message={message}
+                        onEnableEdit={handleMessageEnableEdit}
+                        isEditing={isEditing}
+                        onConfirmEdit={handleMessageEditConfirm}
+                        onCancelEdit={handleMessageEditCancel}
+                    />
+                    {isEditing ? (
+                        <>
+                            <EditBox
+                                fullWidth
+                                multiline
+                                onChange={(e) => {
+                                    setEditContent(e.target.value);
+                                }}
+                                value={editContent}
+                                sx={{
+                                    '& fieldset': { border: 'none' },
+                                    paddingX: 0,
+                                }}
+                            />
+                        </>
+                    ) : (
+                        <ReactMarkdown style={messageTextStyle} children={message.content} components={renderedComponents} />
+                    )}
                 </UserMessage>
             )}
             {message.sender === 'assistant' && (
-                <AssistantMessage className="assistant-message" width="100%">
-                    <ReactMarkdown style={messageTextStyle} children={message.content} components={renderedComponents} />
+                <AssistantMessage className="assistant-message" width="100%" hascontent={`${message.content.trim().length !== 0}`}>
+                    <MessageActions
+                        message={message}
+                        onEnableEdit={handleMessageEnableEdit}
+                        isEditing={isEditing}
+                        onConfirmEdit={handleMessageEditConfirm}
+                        onCancelEdit={handleMessageEditCancel}
+                    />
+                    {isEditing ? (
+                        <>
+                            <EditBox
+                                fullWidth
+                                multiline
+                                onChange={(e) => {
+                                    setEditContent(e.target.value);
+                                }}
+                                value={editContent}
+                                sx={{
+                                    '& fieldset': { border: 'none' },
+                                    paddingX: 0,
+                                }}
+                            />
+                        </>
+                    ) : (
+                        <ReactMarkdown style={messageTextStyle} children={message.content} components={renderedComponents} />
+                    )}{' '}
                 </AssistantMessage>
             )}
         </Box>

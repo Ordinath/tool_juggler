@@ -103,33 +103,64 @@ export function ConversationProvider({ children }) {
             // here we also need to make the SelectedConversation be aware of the new message
             const newConversation = await API.getConversation(selectedConversation);
             setSelectedConversationMessages(newConversation.messages);
-            // and now is the most exciting part - we open a Server-Sent Events connection to the backend to get AI response and  stream the text in a new 'assistant' message within this conversation
 
-            let newAssistantMessage = await API.createMessage(selectedConversation, 'assistant', '\n', new Date().toISOString());
-            setInStreamAssistantMessage(newAssistantMessage);
-            const endpoint = `${API_URL}/conversations/${selectedConversation}/get_ai_completion`;
-            const streamHandler = new StreamHandler({
-                model: 'gpt-4', // 'gpt-3.5-turbo', 'gpt-4'
-                // model: 'gpt-3.5-turbo', // 'gpt-3.5-turbo', 'gpt-4'
-                endpoint,
-                assistant_message_id: newAssistantMessage.id,
-                onMessage: (text, streamText) => {
-                    // console.log('onMessage:', { text, streamText });
-                    setInStreamAssistantMessage({ ...newAssistantMessage, content: streamText });
 
-                },
-                onFinish: async (streamText) => {
-                    // console.log('Stream finished:', streamText);
-                    const newConversation = await API.getConversation(selectedConversation);
-                    setInStreamAssistantMessage(null);
-                    setSelectedConversationMessages(newConversation.messages);
-                },
-                onError: (err) => {
-                    console.error('Stream error:', err);
-                },
-            });
-            streamHandler.start();
+            getAssistantResponse(selectedConversation);
         }
+    };
+    
+    // and now is the most exciting part - we open a Server-Sent Events connection to the backend to get AI response and  stream the text in a new 'assistant' message within this conversation
+    const getAssistantResponse = async (selectedConversation) => {
+        let newAssistantMessage = await API.createMessage(selectedConversation, 'assistant', '\n', new Date().toISOString());
+        setInStreamAssistantMessage(newAssistantMessage);
+        const endpoint = `${API_URL}/conversations/${selectedConversation}/get_ai_completion`;
+        const streamHandler = new StreamHandler({
+            model: 'gpt-4', // 'gpt-3.5-turbo', 'gpt-4'
+            // model: 'gpt-3.5-turbo', // 'gpt-3.5-turbo', 'gpt-4'
+            endpoint,
+            assistant_message_id: newAssistantMessage.id,
+            onMessage: (text, streamText) => {
+                // console.log('onMessage:', { text, streamText });
+                setInStreamAssistantMessage({ ...newAssistantMessage, content: streamText });
+            },
+            onFinish: async (streamText) => {
+                // console.log('Stream finished:', streamText);
+                const newConversation = await API.getConversation(selectedConversation);
+                setInStreamAssistantMessage(null);
+                setSelectedConversationMessages(newConversation.messages);
+            },
+            onError: (err) => {
+                console.error('Stream error:', err);
+            },
+        });
+        streamHandler.start();
+    };
+
+    const handleDeleteMessage = async (messageId) => {
+        console.log('delete message', messageId);
+        await API.deleteMessage(messageId);
+        // refresh messages
+        let fetchedConversation = await API.getConversation(selectedConversation);
+        setSelectedConversationMessages(fetchedConversation.messages);
+    };
+
+    const handleEditMessage = async (messageId, content) => {
+        console.log('edit message', messageId);
+        await API.updateMessage(messageId, content);
+        // refresh messages
+        let fetchedConversation = await API.getConversation(selectedConversation);
+        setSelectedConversationMessages(fetchedConversation.messages);
+    };
+
+    const handleRegenerateMessage = async (messageId) => {
+        await handleDeleteMessage(messageId);
+        await getAssistantResponse(selectedConversation);
+    };
+
+    const isLastAssistantMessage = (messageId) => {
+        if (selectedConversationMessages.length === 0) return false;
+        const lastMessage = selectedConversationMessages[selectedConversationMessages.length - 1];
+        return lastMessage.sender === 'assistant' && lastMessage.id === messageId;
     };
 
     const value = {
@@ -147,6 +178,10 @@ export function ConversationProvider({ children }) {
         handleDeleteConversation,
         handleChangeConversationTitle,
         handleSendMessage,
+        handleDeleteMessage,
+        handleEditMessage,
+        handleRegenerateMessage,
+        isLastAssistantMessage,
     };
 
     return <ConversationsContext.Provider value={value}>{children}</ConversationsContext.Provider>;
