@@ -8,10 +8,10 @@ import DoneIcon from '@mui/icons-material/Done';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useConversations } from './ConversationsContext';
 
-const MessageActions = ({ message, onEnableEdit }) => {
-    const { handleDeleteMessage } = useConversations();
+const MessageActions = ({ message, onEnableEdit, isEditing, onConfirmEdit, onCancelEdit }) => {
+    const { handleDeleteMessage, handleRegenerateMessage, isLastAssistantMessage } = useConversations();
 
-    const [confirmDelete, setConfirmDelete] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     return (
         <Box
@@ -25,14 +25,14 @@ const MessageActions = ({ message, onEnableEdit }) => {
                 zIndex: 1,
             }}
         >
-            {confirmDelete && (
+            {isDeleting && (
                 <>
                     <IconButton
                         size="small"
                         onClick={() => {
                             console.log(`Delete message ${message.id}`);
                             handleDeleteMessage(message.id);
-                            setConfirmDelete(false);
+                            setIsDeleting(false);
                         }}
                     >
                         <DoneIcon fontSize="inherit" />
@@ -40,20 +40,43 @@ const MessageActions = ({ message, onEnableEdit }) => {
                     <IconButton
                         size="small"
                         onClick={() => {
-                            setConfirmDelete(false);
+                            setIsDeleting(false);
                         }}
                     >
                         <CancelIcon fontSize="inherit" />
                     </IconButton>
                 </>
             )}
-            {!confirmDelete && (
+            {isEditing && (
                 <>
-                    {message.sender === 'assistant' && (
+                    <IconButton
+                        size="small"
+                        onClick={() => {
+                            console.log(`Edit message ${message.id}`);
+                            onConfirmEdit();
+                            // setIsDeleting(false);
+                        }}
+                    >
+                        <DoneIcon fontSize="inherit" />
+                    </IconButton>
+                    <IconButton
+                        size="small"
+                        onClick={() => {
+                            onCancelEdit();
+                        }}
+                    >
+                        <CancelIcon fontSize="inherit" />
+                    </IconButton>
+                </>
+            )}
+            {!isDeleting && !isEditing && (
+                <>
+                    {isLastAssistantMessage(message.id) && (
                         <IconButton
                             size="small"
                             onClick={() => {
                                 console.log(`Regenerate message ${message.id}`);
+                                handleRegenerateMessage(message.id);
                             }}
                         >
                             <RefreshIcon fontSize="inherit" />
@@ -62,7 +85,7 @@ const MessageActions = ({ message, onEnableEdit }) => {
                     <IconButton
                         size="small"
                         onClick={() => {
-                            console.log(`Edit message ${message.id}}`);
+                            onEnableEdit();
                         }}
                     >
                         <EditIcon fontSize="inherit" />
@@ -70,7 +93,7 @@ const MessageActions = ({ message, onEnableEdit }) => {
                     <IconButton
                         size="small"
                         onClick={() => {
-                            setConfirmDelete(true);
+                            setIsDeleting(true);
                         }}
                     >
                         <DeleteIcon fontSize="inherit" />
