@@ -1,18 +1,21 @@
+import { useState } from 'react';
 import { styled, alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import { IconButton } from '@mui/material';
 import FileCopyIcon from '@mui/icons-material/FileCopyOutlined';
 import ReactMarkdown from 'react-markdown';
+import MessageActions from './MessageActions';
 // import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 // import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const MessageBox = styled(Box)(({ theme }) => ({
+    position: 'relative',
     borderRadius: theme.shape.borderRadius,
     // padding: theme.spacing(3),
     marginBottom: theme.spacing(1),
     paddingLeft: theme.spacing(2.5),
     paddingRight: theme.spacing(2.5),
+    paddingTop: theme.spacing(2),
     wordBreak: 'break-word',
     wordWrap: 'break-word',
 }));
@@ -94,20 +97,31 @@ const handleCopyToClipboard = (text) => {
 
 export default function Message({ message }) {
     const messageTextStyle = { wordWrap: 'break-word', overflowWrap: 'break-word' };
+
+    // track the state of message edit status and message edit content
+    const [isEditing, setIsEditing] = useState(false);
+    const [editContent, setEditContent] = useState(message.content);
+
+    const handleMessageEnableEdit = () => {
+        setIsEditing(true);
+    };
+
     return (
         <Box key={message.id}>
-            {message.sender === 'system' && (
+            {/* {message.sender === 'system' && (
                 <SystemMessage className="system-message" width="100%">
                     <ReactMarkdown style={messageTextStyle} children={message.content} components={renderedComponents} />
                 </SystemMessage>
-            )}
+            )} */}
             {message.sender === 'user' && (
                 <UserMessage className="user-message" width="100%">
+                    <MessageActions message={message} onEnableEdit={handleMessageEnableEdit} />
                     <ReactMarkdown style={messageTextStyle} children={message.content} components={renderedComponents} />
                 </UserMessage>
             )}
             {message.sender === 'assistant' && (
                 <AssistantMessage className="assistant-message" width="100%">
+                    <MessageActions message={message} onEnableEdit={handleMessageEnableEdit} />
                     <ReactMarkdown style={messageTextStyle} children={message.content} components={renderedComponents} />
                 </AssistantMessage>
             )}
