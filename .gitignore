@@ -31,9 +31,10 @@ yarn-error.log*
 .env*.local
 
 .vercel
-*.ipynb
+# *.ipynb
 **/*.db
 venv/
 **/tools/private/*
-**/docs/private/*
+**/data/private/*
+**/vectorstores/*
 __pycache__/
