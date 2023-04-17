@@ -28,9 +28,6 @@ export default function SelectedConversation() {
                 <Message
                     key={inStreamAssistantMessage.id}
                     message={inStreamAssistantMessage}
-                    sx={{
-                        paddingBottom: '1rem',
-                    }}
                 />
             )}
         </Box>
