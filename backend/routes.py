@@ -1,6 +1,9 @@
 from flask import jsonify, request, Response, stream_with_context
 from langchain.memory.chat_message_histories.in_memory import ChatMessageHistory
 from langchain.memory import ConversationBufferMemory
+import chromadb
+from chromadb.config import Settings
+from chromadb.utils import embedding_functions
 from db_models import Conversation, Message, db
 from utils import discover_tools
 from tool_juggler import tool_juggler_agent
@@ -126,3 +129,20 @@ def register_routes(app):
                 tool_juggler_agent(app, last_user_message, model, tools, memory,
                             assistant_message_id)),
             content_type="text/event-stream")
+    
+    # @app.route('/conversations/<string:conversation_id>/upsert_embedding', methods=['POST'])
+    # def upsert_embedding(conversation_id):
+    #     persist_directory = "data/common/vectorstores/long_term_memory_chroma"
+    #     client = chromadb.Client(Settings(
+    #         chroma_db_impl="duckdb+parquet",
+    #         # Optional, defaults to .chromadb/ in the current directory
+    #         persist_directory=persist_directory
+    #     ))
+    #     sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+    #         model_name="all-MiniLM-L6-v2")
+
+    #     collection = client.get_or_create_collection(
+    #         name="long_term_memory_collection", embedding_function=sentence_transformer_ef)
+        
+    #     # if embedding already exists, update it
+    #     collection.get(ids=[conversation_id])
