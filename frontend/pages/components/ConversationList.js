@@ -9,7 +9,7 @@ export default function ConversationList() {
 
     return (
         <>
-            <Box width="100%">
+            <Box width="100%" sx={{ paddingRight: '2rem' }}>
                 <Button variant="outlined" fullWidth onClick={handleAddNewConversation}>
                     New conversation
                 </Button>

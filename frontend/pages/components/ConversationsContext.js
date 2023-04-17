@@ -104,11 +104,10 @@ export function ConversationProvider({ children }) {
             const newConversation = await API.getConversation(selectedConversation);
             setSelectedConversationMessages(newConversation.messages);
 
-
             getAssistantResponse(selectedConversation);
         }
     };
-    
+
     // and now is the most exciting part - we open a Server-Sent Events connection to the backend to get AI response and  stream the text in a new 'assistant' message within this conversation
     const getAssistantResponse = async (selectedConversation) => {
         let newAssistantMessage = await API.createMessage(selectedConversation, 'assistant', '\n', new Date().toISOString());
@@ -163,6 +162,20 @@ export function ConversationProvider({ children }) {
         return lastMessage.sender === 'assistant' && lastMessage.id === messageId;
     };
 
+    const handleUpsertConversationEmbeddings = async (conversationId) => {
+        console.log('upsert conversation embeddings', conversationId);
+        await API.upsertEmbeddings(conversationId);
+        const fetchedConversations = (await API.getConversations()).reverse();
+        setConversations(fetchedConversations);
+    };
+
+    const handleDeleteConversationEmbeddings = async (conversationId) => {
+        console.log('delete conversation embeddings', conversationId);
+        await API.deleteEmbeddings(conversationId);
+        const fetchedConversations = (await API.getConversations()).reverse();
+        setConversations(fetchedConversations);
+    };
+
     const value = {
         conversations,
         setConversations,
@@ -181,6 +194,8 @@ export function ConversationProvider({ children }) {
         handleDeleteMessage,
         handleEditMessage,
         handleRegenerateMessage,
+        handleUpsertConversationEmbeddings,
+        handleDeleteConversationEmbeddings,
         isLastAssistantMessage,
     };
 

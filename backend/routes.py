@@ -1,8 +1,13 @@
 from flask import jsonify, request, Response, stream_with_context
 from langchain.memory.chat_message_histories.in_memory import ChatMessageHistory
 from langchain.memory import ConversationBufferMemory
-from db_models import Conversation, Message, db
-from utils import discover_tools
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from datetime import datetime
+import chromadb
+from chromadb.config import Settings
+from chromadb.utils import embedding_functions
+from db_models import Conversation, Message, Embedding, db
+from utils import discover_tools, upsert_embeddings
 from tool_juggler import tool_juggler_agent
 
 
@@ -23,7 +28,8 @@ def register_routes(app):
         conversations = Conversation.query.all()
         return jsonify([{
             "id": conv.id,
-            "title": conv.title
+            "title": conv.title,
+            "embedded": conv.embedded,
         } for conv in conversations])
 
     @app.route('/conversations/<string:conversation_id>', methods=['GET', 'PUT', 'DELETE'])
@@ -40,6 +46,16 @@ def register_routes(app):
             for msg in conv.messages:
                 db.session.delete(msg)
 
+            # Delete embeddings associated with the conversation
+            embedding_ids_to_delete = []
+            for emb in conv.embeddings:
+                embedding_ids_to_delete.append(emb.id)
+                db.session.delete(emb)
+
+            # Remove embeddings from the vector-based data store
+            collection = app.vectorstores['long_term_memory_collection']
+            collection.delete(ids=embedding_ids_to_delete)
+
             db.session.delete(conv)
             db.session.commit()
             return '', 204
@@ -50,7 +66,13 @@ def register_routes(app):
             "content": msg.content,
             "timestamp": msg.timestamp
         } for msg in conv.messages]
-        return jsonify({"id": conv.id, "title": conv.title, "messages": messages})
+
+        return jsonify({
+            "id": conv.id,
+            "title": conv.title,
+            "embedded": conv.embedded,
+            "messages": messages
+        })
 
     @app.route('/conversations/<string:conversation_id>/messages', methods=['POST'])
     def add_message(conversation_id):
@@ -113,16 +135,59 @@ def register_routes(app):
         print('last_user_message', last_user_message)
         print('message_history', message_history)
 
-
         memory = ConversationBufferMemory(memory_key="chat_history",
-                                        return_messages=True,
-                                        chat_memory=message_history)
-        
+                                          return_messages=True,
+                                          chat_memory=message_history)
+
         folders = ["tools.common", "tools.private"]
-        tools = discover_tools(folders)
+        tools = discover_tools(folders, app)
 
         return Response(
             stream_with_context(
                 tool_juggler_agent(app, last_user_message, model, tools, memory,
-                            assistant_message_id)),
+                                   assistant_message_id)),
             content_type="text/event-stream")
+
+    @app.route('/conversations/<string:conversation_id>/upsert_long_term_memory_embedding', methods=['POST'])
+    def upsert_long_term_memory_embedding(conversation_id):
+        collection = app.vectorstores['long_term_memory_collection']
+
+        messages_to_embed = ""
+        conv = Conversation.query.get_or_404(conversation_id)
+        for msg in conv.messages:
+
+            timestamp = datetime.fromisoformat(msg.timestamp.replace("Z", ""))
+            formatted_timestamp = timestamp.strftime("%Y-%m-%d %H:%M")
+
+            new_msg = """\n{timestamp} - {sender}: {content}"""
+            messages_to_embed += new_msg.format(
+                timestamp=formatted_timestamp, sender=msg.sender, content=msg.content)
+
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=500, chunk_overlap=0)
+        messages_to_embed_chunks = text_splitter.split_text(messages_to_embed)
+
+        upsert_embeddings(app, conversation_id, collection,
+                          messages_to_embed_chunks)
+
+        return jsonify({"id": conversation_id}), 201
+
+    @app.route('/conversations/<string:conversation_id>/delete_long_term_memory_embedding', methods=['DELETE'])
+    def delete_long_term_memory_embedding(conversation_id):
+
+        conv = Conversation.query.get_or_404(conversation_id)
+
+        # Set the embedded flag to False for the conversation
+        conv.embedded = False
+        embedding_ids_to_delete = []
+        for emb in conv.embeddings:
+            embedding_ids_to_delete.append(emb.id)
+            db.session.delete(emb)
+
+        # Remove embeddings from the vector-based data store
+        collection = app.vectorstores['long_term_memory_collection']
+        collection.delete(ids=embedding_ids_to_delete)
+
+        db.session.commit()
+
+        return '', 204
