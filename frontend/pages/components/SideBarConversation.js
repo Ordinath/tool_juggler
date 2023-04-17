@@ -8,6 +8,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import DoneIcon from '@mui/icons-material/Done';
 import CancelIcon from '@mui/icons-material/Cancel';
+import TurnedInNotIcon from '@mui/icons-material/TurnedInNot';
+import TurnedInIcon from '@mui/icons-material/TurnedIn';
 import { useEffect, useState } from 'react';
 import { styled, alpha } from '@mui/material/styles';
 import { useConversations } from './ConversationsContext';
@@ -21,7 +23,14 @@ const StyledConversation = styled(OutlinedInput)(({ editmode, selected, confirmd
 }));
 
 export default function SideBarConversation({ conversation }) {
-    const { selectedConversation, setSelectedConversation, handleChangeConversationTitle, handleDeleteConversation } = useConversations();
+    const {
+        selectedConversation,
+        setSelectedConversation,
+        handleChangeConversationTitle,
+        handleDeleteConversation,
+        handleUpsertConversationEmbeddings,
+        handleDeleteConversationEmbeddings,
+    } = useConversations();
     const [editMode, setEditMode] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [newConversationTitle, setNewConversationTitle] = useState(conversation.title);
@@ -36,7 +45,7 @@ export default function SideBarConversation({ conversation }) {
     }, [selectedConversation]);
 
     return (
-        <Box key={conversation.id} className="sidebar-conversation" width="100%">
+        <Box key={conversation.id} className="sidebar-conversation" width="100%" sx={{ position: 'relative', paddingRight: '2rem' }}>
             {selectedConversation !== conversation.id ? (
                 <Box width="100%">
                     <Button
@@ -68,7 +77,7 @@ export default function SideBarConversation({ conversation }) {
                             value={newConversationTitle}
                             sx={{
                                 '& fieldset': { border: 'none' },
-                                paddingRight: '4rem',
+                                paddingRight: '6rem',
                             }}
                             endAdornment={
                                 <InputAdornment position="end">
@@ -184,6 +193,25 @@ export default function SideBarConversation({ conversation }) {
                     </Grid>
                 </Grid>
             )}
+            <IconButton
+                edge="end"
+                color="inherit"
+                onClick={() => {
+                    if (conversation.embedded) {
+                        handleDeleteConversationEmbeddings(conversation.id);
+                    } else {
+                        handleUpsertConversationEmbeddings(conversation.id);
+                    }
+                }}
+                sx={{
+                    fontSize: '0.9rem',
+                    position: 'absolute',
+                    bottom: 5.5,
+                    left: 277,
+                }}
+            >
+                {conversation.embedded ? <TurnedInIcon fontSize="inherit" color="primary" /> : <TurnedInNotIcon fontSize="inherit" color="warning" />}
+            </IconButton>
         </Box>
     );
 }
