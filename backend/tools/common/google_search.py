@@ -4,7 +4,7 @@ from langchain.agents import Tool
 search_tool = GoogleSearchAPIWrapper()
 
 
-def get_tool():
+def get_tool(app):
     return Tool(
         name="Search",
         func=search_tool.run,

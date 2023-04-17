@@ -9,8 +9,8 @@ export async function getConversationsWithMessages(): Promise<Conversation[]> {
     return response.data;
 }
 
-export async function getConversations(): Promise<{ id: string; title: string }[]> {
-    const response: AxiosResponse<{ id: string; title: string }[]> = await axios.get(`${API_URL}/conversations`);
+export async function getConversations(): Promise<{ id: string; title: string; embedded: boolean }[]> {
+    const response: AxiosResponse<{ id: string; title: string; embedded: boolean }[]> = await axios.get(`${API_URL}/conversations`);
     return response.data;
 }
 
@@ -19,8 +19,10 @@ export async function createConversation(title: string, model?: string): Promise
     return response.data;
 }
 
-export async function getConversation(conversationId: string): Promise<{ id: string; title: string; messages: Message[] }> {
-    const response: AxiosResponse<{ id: string; title: string; messages: Message[] }> = await axios.get(`${API_URL}/conversations/${conversationId}`);
+export async function getConversation(conversationId: string): Promise<{ id: string; title: string; embedded: boolean; messages: Message[] }> {
+    const response: AxiosResponse<{ id: string; title: string; embedded: boolean; messages: Message[] }> = await axios.get(
+        `${API_URL}/conversations/${conversationId}`
+    );
     return response.data;
 }
 
@@ -54,6 +56,15 @@ export async function deleteMessage(messageId: string): Promise<void> {
     await axios.delete(`${API_URL}/messages/${messageId}`);
 }
 
+export async function upsertEmbeddings(conversationId: string): Promise<{ id: string }> {
+    const response: AxiosResponse<{ id: string }> = await axios.post(`${API_URL}/conversations/${conversationId}/upsert_long_term_memory_embedding`);
+    return response.data;
+}
+
+export async function deleteEmbeddings(conversationId: string): Promise<void> {
+    await axios.delete(`${API_URL}/conversations/${conversationId}/delete_long_term_memory_embedding`);
+}
+
 const API = {
     getConversations,
     createConversation,
@@ -63,6 +74,8 @@ const API = {
     createMessage,
     updateMessage,
     deleteMessage,
+    upsertEmbeddings,
+    deleteEmbeddings,
 };
 
 export default API;

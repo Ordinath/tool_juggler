@@ -41,7 +41,9 @@ venv\Scripts\activate
 
 `pip install -r requirements.txt`
 
-the fun part - replace broken code in langchain library (to properly recognize chat model stream end):
+the fun parts:
+
+replace broken code in langchain library (to properly recognize chat model stream end):
 
 ```cd venv/lib/python3.10/site-packages/langchain/chat_models```
 
@@ -57,6 +59,27 @@ with
 output = self._generate(messages, stop=stop)
 self.callback_manager.on_llm_end(output, verbose=self.verbose)
 return output.generations[0].message
+```
+
+replace broken code in chroma library (to intake optional embedding_function parameter):
+
+```cd venv/lib/python3.10/site-packages/chromadb/api```
+
+open __init__.py and replace the following code:
+
+```
+def get_or_create_collection(self, name: str, metadata: Optional[Dict] = None) -> Collection: # line 85
+```
+
+with
+
+```
+def get_or_create_collection(
+    self,
+    name: str,
+    metadata: Optional[Dict] = None,
+    embedding_function: Optional[Callable] = None,
+    ) -> Collection:
 ```
 
 to launch:

@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 from db_models import db
 from routes import register_routes
+from vectorstores import register_vectorstores
 
 load_dotenv()
 
@@ -14,7 +15,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///conversations.db'
 db.init_app(app)
 CORS(app)
 
+register_vectorstores(app)
 register_routes(app)
+
+print(app.vectorstores)
 
 if __name__ == '__main__':
     with app.app_context():
