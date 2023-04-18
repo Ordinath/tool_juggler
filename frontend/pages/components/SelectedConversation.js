@@ -6,7 +6,7 @@ import Message from './Message';
 import { useConversations } from './ConversationsContext';
 
 export default function SelectedConversation() {
-    const { selectedConversation, messages, conversationLoading, inStreamAssistantMessage } = useConversations();
+    const { selectedConversation, messages, conversationLoading, inStreamAssistantMessage, inStreamAssistantAction } = useConversations();
 
     // if inStreamAssistantMessage we need to autoscroll to bottom
     useEffect(() => {
@@ -15,6 +15,8 @@ export default function SelectedConversation() {
             conversation.scrollTop = conversation.scrollHeight;
         }
     }, [inStreamAssistantMessage]);
+
+    // console.log('inStreamAssistantAction', inStreamAssistantAction);
 
     return (
         <Box className="conversation" sx={{ flexGrow: 1, overflowY: 'auto', paddingBottom: '1rem', paddingRight: '1rem' }}>
@@ -25,10 +27,7 @@ export default function SelectedConversation() {
                     return <Message key={message.id} message={message} />;
                 })}
             {!conversationLoading && selectedConversation && inStreamAssistantMessage && (
-                <Message
-                    key={inStreamAssistantMessage.id}
-                    message={inStreamAssistantMessage}
-                />
+                <Message key={inStreamAssistantMessage.id} message={inStreamAssistantMessage} streamedAction={inStreamAssistantAction} />
             )}
         </Box>
     );

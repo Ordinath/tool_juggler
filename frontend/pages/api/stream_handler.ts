@@ -1,3 +1,4 @@
+import { log } from 'console';
 import { SSE } from '../lib/sse';
 
 export interface StreamHandlerOptions {
@@ -64,7 +65,20 @@ export class StreamHandler {
             return;
         }
         if (text !== undefined) {
-            this.streamText += text;
+            // if text matches the /\[\[(.*?)\]\]/ regex, we dont want to add it to the streamText
+            // made to track AI assistant action messages
+            const regex = /\[\[(.*?)\]\]/;
+            const match = text.match(regex);
+            if (match) {
+                console.log('AI assistant action', match[1]);
+            } else {
+                this.streamText += text;
+            }
+
+            // if (!regex.test(text)) {
+            //     console.log('text', text);
+            //     this.streamText += text;
+            // }
             this.options.onMessage(text, this.streamText);
         }
     }
