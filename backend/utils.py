@@ -20,7 +20,7 @@ def discover_tools(folders, app):
     return tools
 
 
-def upsert_embeddings(app, conversation_id, vectorstore_collection, embedding_strings):
+def upsert_embeddings(app, conversation_id, vectorstore, embedding_strings):
     new_embeddings = []
 
     with app.app_context():
@@ -36,7 +36,9 @@ def upsert_embeddings(app, conversation_id, vectorstore_collection, embedding_st
                 embedding.id for embedding in conversation.embeddings]
 
             # Delete existing embeddings from vectorstore
-            vectorstore_collection.delete(ids=existing_embedding_ids)
+
+            vectorstore['collection'].delete(ids=existing_embedding_ids)
+            vectorstore['client'].persist()
 
             # Delete existing embeddings from SQLite database
             Embedding.query.filter_by(conversation_id=conversation_id).delete()
@@ -52,6 +54,9 @@ def upsert_embeddings(app, conversation_id, vectorstore_collection, embedding_st
         # Add new embeddings to vectorstore
         documents = [item['content'] for item in new_embeddings]
         ids = [item['id'] for item in new_embeddings]
-        vectorstore_collection.add(documents=documents, ids=ids)
+        print('before emb upsert', vectorstore['collection'].count())
+        vectorstore['collection'].add(documents=documents, ids=ids)
+        print('after emb upsert', vectorstore['collection'].count())
+        vectorstore['client'].persist()
 
     return new_embeddings

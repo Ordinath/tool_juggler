@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -9,16 +10,17 @@ from vectorstores import register_vectorstores
 
 load_dotenv()
 
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///conversations.db'
 db.init_app(app)
 CORS(app)
 
-register_vectorstores(app)
+if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+    register_vectorstores(app)
+    print(app.vectorstores)
+
 register_routes(app)
 
-print(app.vectorstores)
 
 if __name__ == '__main__':
     with app.app_context():

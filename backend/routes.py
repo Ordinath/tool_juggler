@@ -52,9 +52,12 @@ def register_routes(app):
                 embedding_ids_to_delete.append(emb.id)
                 db.session.delete(emb)
 
-            # Remove embeddings from the vector-based data store
-            collection = app.vectorstores['long_term_memory_collection']
-            collection.delete(ids=embedding_ids_to_delete)
+            # Remove embeddings from the vector-based data store if there are any
+            if embedding_ids_to_delete:
+                client = app.vectorstores['long_term_memory']['client']
+                collection = app.vectorstores['long_term_memory']['collection']
+                collection.delete(ids=embedding_ids_to_delete)
+                client.persist()
 
             db.session.delete(conv)
             db.session.commit()
@@ -150,8 +153,6 @@ def register_routes(app):
 
     @app.route('/conversations/<string:conversation_id>/upsert_long_term_memory_embedding', methods=['POST'])
     def upsert_long_term_memory_embedding(conversation_id):
-        collection = app.vectorstores['long_term_memory_collection']
-
         messages_to_embed = ""
         conv = Conversation.query.get_or_404(conversation_id)
         for msg in conv.messages:
@@ -167,7 +168,7 @@ def register_routes(app):
             chunk_size=500, chunk_overlap=0)
         messages_to_embed_chunks = text_splitter.split_text(messages_to_embed)
 
-        upsert_embeddings(app, conversation_id, collection,
+        upsert_embeddings(app, conversation_id, app.vectorstores['long_term_memory'],
                           messages_to_embed_chunks)
 
         return jsonify({"id": conversation_id}), 201
@@ -185,8 +186,12 @@ def register_routes(app):
             db.session.delete(emb)
 
         # Remove embeddings from the vector-based data store
-        collection = app.vectorstores['long_term_memory_collection']
+        client = app.vectorstores['long_term_memory']['client']
+        collection = app.vectorstores['long_term_memory']['collection']
+        print('before emb delete', collection.count())
         collection.delete(ids=embedding_ids_to_delete)
+        print('after emb delete', collection.count())
+        client.persist()
 
         db.session.commit()
 
