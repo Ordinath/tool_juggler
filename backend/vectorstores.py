@@ -5,7 +5,7 @@ import inspect
 import sys
 
 
-def init_vector_store_long_term_memory_collection():
+def init_vector_store_long_term_memory():
     persist_directory = 'data/common/vectorstores/long_term_memory_chroma'
     client = chromadb.Client(Settings(
         chroma_db_impl="duckdb+parquet",
@@ -16,11 +16,12 @@ def init_vector_store_long_term_memory_collection():
     sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
         model_name="all-MiniLM-L6-v2")
     collection = client.get_or_create_collection(
-        name="long_term_memory_collection", embedding_function=sentence_transformer_ef)
+        name="long_term_memory", embedding_function=sentence_transformer_ef)
 
-    print(collection.count())
-    # print(collection.peek())
-    return collection
+    print('long_term_memory collection initialized with number of embeddings: ',
+          collection.count())
+
+    return {"client": client, "collection": collection}
 
 
 # def init_vector_store_2():

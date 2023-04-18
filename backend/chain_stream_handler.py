@@ -44,6 +44,7 @@ class ChainStreamHandler(StreamingStdOutCallbackHandler):
             if self.matched_start and not self.matched_end:
                 # self.gen.send(f"data: {encoded_text}\n\n")
                 self.gen.send("""data: """ + encoded_text.encode(
+                # self.gen.send("""data: """ + token.encode(
                     'latin-1', 'backslashreplace').decode('unicode-escape') +
                     """\n\n""")
 
