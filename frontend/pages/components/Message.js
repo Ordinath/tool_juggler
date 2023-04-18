@@ -6,6 +6,7 @@ import FileCopyIcon from '@mui/icons-material/FileCopyOutlined';
 import ReactMarkdown from 'react-markdown';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import MessageActions from './MessageActions';
+import BlinkingDots from './BlinkingDots';
 import { useConversations } from './ConversationsContext';
 // import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 // import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -22,19 +23,15 @@ const MessageBox = styled(Box)(({ hascontent, theme }) => ({
     wordBreak: 'break-word',
     wordWrap: 'break-word',
 }));
+const StreamedActionBox = styled(Box)(({ theme }) => ({
+    paddingTop: theme.spacing(2),
+}));
 
 const EditBox = styled(OutlinedInput)(({ editmode, selected, confirmdelete, theme }) => ({
     '& .MuiInputBase-input.Mui-disabled': {
         WebkitTextFillColor: undefined,
     },
-    // paddingTop: theme.spacing(2),
-    // marginBottom: theme.spacing(1),
-    // paddingLeft: theme.spacing(2.5),
-    // paddingRight: theme.spacing(2.5),
     paddingTop: theme.spacing(2),
-    // marginBottom: theme.spacing(0.1),
-    // border: confirmdelete === 'true' ? `.0875rem solid ${theme.palette.error.main}` : `.0875rem solid ${theme.palette.primary.main}`,
-    // backgroundColor: confirmdelete === 'true' ? alpha(theme.palette.error.main, 0.3) : alpha(theme.palette.secondary.main, 0.3),
 }));
 
 const SystemMessage = styled(MessageBox)(({ theme }) => ({
@@ -112,7 +109,7 @@ const handleCopyToClipboard = (text) => {
     );
 };
 
-export default function Message({ message }) {
+export default function Message({ message, streamedAction }) {
     const messageTextStyle = { wordWrap: 'break-word', overflowWrap: 'break-word' };
 
     const { handleEditMessage } = useConversations();
@@ -194,9 +191,13 @@ export default function Message({ message }) {
                                 }}
                             />
                         </>
+                    ) : streamedAction ? (
+                        <StreamedActionBox>
+                            <BlinkingDots>Tool Juggler is using {streamedAction} tool</BlinkingDots>
+                        </StreamedActionBox>
                     ) : (
                         <ReactMarkdown style={messageTextStyle} children={message.content} components={renderedComponents} />
-                    )}{' '}
+                    )}
                 </AssistantMessage>
             )}
         </Box>

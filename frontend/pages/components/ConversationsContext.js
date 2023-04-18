@@ -28,6 +28,7 @@ export function ConversationProvider({ children }) {
     const [conversationLoading, setConversationLoading] = useState(false);
     const [selectedConversationMessages, setSelectedConversationMessages] = useState([]);
     const [inStreamAssistantMessage, setInStreamAssistantMessage] = useState(null);
+    const [inStreamAssistantAction, setInStreamAssistantAction] = useState(null);
 
     // fetch conversations from backend upon page load
     useEffect(() => {
@@ -120,6 +121,25 @@ export function ConversationProvider({ children }) {
             assistant_message_id: newAssistantMessage.id,
             onMessage: (text, streamText) => {
                 // console.log('onMessage:', { text, streamText });
+                // if text matches /\[\[(.*?)\]\]/ an action was sent from the backend
+                const regex = /\[\[(.*?)\]\]/;
+                const match = text.match(regex);
+                if (match) {
+                    const action = match[1];
+                    // console.log('action', action);
+                    // console.log('inStreamAssistantAction', inStreamAssistantAction);
+                    setInStreamAssistantAction(action);
+                } else {
+                    // console.log('streamText', streamText);
+                    // console.log('inStreamAssistantAction', inStreamAssistantAction);
+                    setInStreamAssistantAction((prev) => {
+                        if (prev) {
+                            // console.log('setInStreamAssistantAction UNSETTING');
+                            return null;
+                        }
+                    });
+                }
+
                 setInStreamAssistantMessage({ ...newAssistantMessage, content: streamText });
             },
             onFinish: async (streamText) => {
@@ -187,6 +207,8 @@ export function ConversationProvider({ children }) {
         setConversationLoading,
         inStreamAssistantMessage,
         setInStreamAssistantMessage,
+        inStreamAssistantAction,
+        setInStreamAssistantAction,
         handleAddNewConversation,
         handleDeleteConversation,
         handleChangeConversationTitle,

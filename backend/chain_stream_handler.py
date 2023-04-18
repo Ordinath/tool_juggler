@@ -31,13 +31,26 @@ class ChainStreamHandler(StreamingStdOutCallbackHandler):
 
         print(token)
         self.ai_message += token
-        encoded_text = quote(token)
+        # encoded_text = quote(token)
 
         if not self.started:
             if re.search(self.start_pattern, self.ai_message):
                 self.started = True
                 self.matched_start = True
                 self.ai_message = ""
+            else:
+                # Add a regex pattern to capture other actions
+                other_action_pattern = r'"action": "([^"]+)",'
+                other_action_match = re.search(
+                    other_action_pattern, self.ai_message)
+
+                # If a match is found, send a token to the frontend with the action name
+                if other_action_match:
+                    action_name = other_action_match.group(1)
+                    if action_name != "Final Answer":
+                        encoded_action = quote(f"[[{action_name}]]")
+                        self.gen.send(f"data: {encoded_action}\n\n")
+                        self.ai_message = ""
         else:
             if re.search(self.end_pattern, self.ai_message):
                 self.matched_end = True
