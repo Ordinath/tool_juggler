@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Union
 from urllib.parse import quote
 from db_models import db, Message
 import re
+import json
 
 
 class ChainStreamHandler(StreamingStdOutCallbackHandler):
@@ -19,6 +20,7 @@ class ChainStreamHandler(StreamingStdOutCallbackHandler):
         self.started = False
         self.matched_start = False
         self.matched_end = False
+        self.buffer = ""
 
     def on_llm_start(self, serialized: Dict[str, Any], prompts: List[str],
                      **kwargs: Any) -> None:
@@ -42,14 +44,22 @@ class ChainStreamHandler(StreamingStdOutCallbackHandler):
                 self.ai_message = re.sub(self.end_pattern, '', self.ai_message)
 
             if self.matched_start and not self.matched_end:
-                # self.gen.send(f"data: {encoded_text}\n\n")
-                self.gen.send("""data: """ + encoded_text.encode(
-                # self.gen.send("""data: """ + token.encode(
-                    'latin-1', 'backslashreplace').decode('unicode-escape') +
-                    """\n\n""")
 
-        # sys.stdout.write(token)
-        # sys.stdout.flush()
+                print(self.buffer)
+                # Add the token to the buffer
+                self.buffer += token
+
+                # If the buffer contains a space or newline, send the buffer content to the frontend
+                if " " in self.buffer or "\\n" in self.buffer:
+                    # Replace newline string representation with actual newline character
+                    self.buffer = self.buffer.replace("\\n", "\n")
+
+                    encoded_buffer = quote(self.buffer)
+                    self.gen.send("""data: """ + encoded_buffer.encode(
+                        'latin-1', 'backslashreplace').decode('unicode-escape') +
+                        """\n\n""")
+                    # Clear the buffer
+                    self.buffer = ""
 
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
         print("LLM End")
