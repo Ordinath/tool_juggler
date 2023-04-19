@@ -31,7 +31,7 @@ This task will enable users to upload custom tools to the project, expanding its
     "tool_type": "common",
     "tool_definition": "example.py",
     "vectorstore_init": null,
-    "vectorstore_prep": null,
+    "prep_script": null,
     "env_vars": [
         "EXAMPLE_VAR",
         "EXAMPLE_VAR_2"
