@@ -1,23 +1,55 @@
 import os
 import importlib
+import sys
 from db_models import Conversation, Message, Embedding, db
 
 
-def discover_tools(folders, app):
+def register_tools(root_directories, app):
     tools = []
 
-    for folder in folders:
-        for filename in os.listdir(folder.replace(".", "/")):
-            if not filename.endswith(".py") or filename.startswith("__"):
-                continue
+    for root_directory in root_directories:
 
-            module_name = filename[:-3]
-            module_path = f"{folder}.{module_name}"
-            module = importlib.import_module(module_path)
-            tool = module.get_tool(app)
-            tools.extend(tool)
+        # Iterate through the nested directories and find .py files
+        for root, _, filenames in os.walk(root_directory):
+            for filename in filenames:
+                if not filename.endswith(".py") or filename.startswith("__"):
+                    continue
+
+                # Construct the module path and import the module
+                relative_path = os.path.relpath(root, root_directory)
+                module_path = os.path.join(
+                    relative_path, filename[:-3]).replace(os.path.sep, ".")
+
+                # Find the parent package name
+                parent_package = os.path.basename(
+                    os.path.dirname(os.path.dirname(root)))
+                module_path = f"{parent_package}.{module_path}"
+
+                spec = importlib.util.spec_from_file_location(
+                    module_path, os.path.join(root, filename))
+                module = importlib.util.module_from_spec(spec)
+                sys.modules[module_path] = module
+                spec.loader.exec_module(module)
+
+                tool = module.get_tool(app)
+                tools.extend(tool)
 
     return tools
+
+    # tools = []
+
+    # for folder in folders:
+    #     for filename in os.listdir(folder.replace(".", "/")):
+    #         if not filename.endswith(".py") or filename.startswith("__"):
+    #             continue
+
+    #         module_name = filename[:-3]
+    #         module_path = f"{folder}.{module_name}"
+    #         module = importlib.import_module(module_path)
+    #         tool = module.get_tool(app)
+    #         tools.extend(tool)
+
+    # return tools
 
 
 def upsert_embeddings(app, conversation_id, vectorstore, embedding_strings):
