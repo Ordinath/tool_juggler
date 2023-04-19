@@ -7,8 +7,12 @@ import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 from db_models import Conversation, Message, Embedding, db
-from utils import discover_tools, upsert_embeddings
+from utils import register_tools, upsert_embeddings
 from tool_juggler import tool_juggler_agent
+import os
+from werkzeug.utils import secure_filename
+
+# app.config['UPLOAD_FOLDER'] = 'path/to/your/upload/directory'
 
 
 def register_routes(app):
@@ -142,8 +146,15 @@ def register_routes(app):
                                           return_messages=True,
                                           chat_memory=message_history)
 
-        folders = ["tools.common", "tools.private"]
-        tools = discover_tools(folders, app)
+        # folders = ["tools.common", "tools.private"]
+        # tools = register_tools(folders, app)
+        root_directories = [
+            os.path.join(os.path.dirname(__file__),
+                         'resources', 'common', 'tools'),
+            os.path.join(os.path.dirname(__file__),
+                         'resources', 'private', 'tools'),
+        ]
+        tools = register_tools(root_directories, app)
 
         return Response(
             stream_with_context(
@@ -196,3 +207,24 @@ def register_routes(app):
         db.session.commit()
 
         return '', 204
+
+    @app.route('/upload_tool_zip', methods=['POST'])
+    def upload_tool_zip():
+        print(request.files)
+        if 'upload_file' not in request.files:
+            return jsonify({'error': 'No file part'}), 400
+
+        file = request.files['upload_file']
+
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join('tool_packages', filename))
+            return jsonify({'message': 'File uploaded successfully'}), 200
+
+
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'zip'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

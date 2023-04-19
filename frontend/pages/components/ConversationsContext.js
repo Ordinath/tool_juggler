@@ -196,6 +196,16 @@ export function ConversationProvider({ children }) {
         setConversations(fetchedConversations);
     };
 
+    const handleToolZipDrop = async (zipFiles) => {
+        console.log('zipFiles:', zipFiles);
+        try {
+            const response = await API.uploadZipFile(zipFiles[0]);
+            console.log('File upload response:', response);
+        } catch (error) {
+            console.error('File upload error:', error);
+        }
+    };
+
     const value = {
         conversations,
         setConversations,
@@ -209,6 +219,7 @@ export function ConversationProvider({ children }) {
         setInStreamAssistantMessage,
         inStreamAssistantAction,
         setInStreamAssistantAction,
+        handleToolZipDrop,
         handleAddNewConversation,
         handleDeleteConversation,
         handleChangeConversationTitle,
