@@ -31,6 +31,8 @@ def register_tools(root_directories, app):
                 sys.modules[module_path] = module
                 spec.loader.exec_module(module)
 
+                print(f"Registering tool: {module_path}")
+
                 tool = module.get_tool(app)
                 tools.extend(tool)
 
@@ -92,3 +94,9 @@ def upsert_embeddings(app, conversation_id, vectorstore, embedding_strings):
         vectorstore['client'].persist()
 
     return new_embeddings
+
+
+def to_snake_case(name):
+    import re
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
