@@ -1,6 +1,8 @@
 import inspect
 import os
 import importlib
+import sys
+from flask import current_app
 
 
 def register_vectorstores(app):
@@ -35,3 +37,23 @@ def register_vectorstores(app):
                             vectorstores[vectorstore_name] = function()
 
     app.vectorstores = vectorstores
+
+
+def add_vectorstore_to_app(app, init_script_path):
+    # Insert the directory containing the init script to sys.path
+    init_script_dir = os.path.dirname(init_script_path)
+    sys.path.insert(0, init_script_dir)
+
+    # Import the init script module
+    module_name = os.path.splitext(os.path.basename(init_script_path))[0]
+    module = importlib.import_module(module_name)
+
+    # Iterate over all functions defined in the module
+    for name, function in inspect.getmembers(module, inspect.isfunction):
+        # If the function name starts with 'init_vectorstore_', call the function and store the result
+        if name.startswith('init_vectorstore_'):
+            vectorstore_name = name.replace('init_vectorstore_', '')
+            app.vectorstores[vectorstore_name] = function()
+
+    # Remove the directory from sys.path
+    sys.path.remove(init_script_dir)

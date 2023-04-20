@@ -28,8 +28,10 @@ This task will enable users to upload custom tools to the project, expanding its
 
 ```json
 {
+    "name": "example",
     "tool_type": "common",
     "tool_definition": "example.py",
+    "requirements": "requirements.txt",
     "vectorstore_init": null,
     "prep_script": null,
     "env_vars": [

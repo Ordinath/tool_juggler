@@ -1,0 +1,5 @@
+{
+    "name": "test",
+    "tool_type": "common",
+    "tool_definition": "tool.py"
+}

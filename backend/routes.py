@@ -9,6 +9,7 @@ from chromadb.utils import embedding_functions
 from db_models import Conversation, Message, Embedding, db
 from utils import register_tools, upsert_embeddings
 from tool_juggler import tool_juggler_agent
+from process_tool_zip import process_tool_zip
 import os
 from werkzeug.utils import secure_filename
 
@@ -221,8 +222,12 @@ def register_routes(app):
 
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join('tool_packages', filename))
-            return jsonify({'message': 'File uploaded successfully'}), 200
+            file_path = os.path.join('resources', 'tool_packages', filename)
+            dir_path = os.path.dirname(file_path)
+            os.makedirs(dir_path, exist_ok=True)
+            file.save(file_path)
+            processing_result = process_tool_zip(app, file_path)
+            return jsonify({'message': processing_result}), 200 if processing_result == "Tool processed successfully" else 400
 
 
 def allowed_file(filename):
