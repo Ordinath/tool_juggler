@@ -4,6 +4,7 @@ import sys
 from db_models import Conversation, Message, Embedding, db
 
 
+
 def register_tools(root_directories, app):
     tools = []
 
