@@ -6,11 +6,16 @@ import subprocess
 import os
 from vectorstores import add_vectorstore_to_app
 from utils import to_snake_case
+import nbconvert
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
 
 def process_tool_zip(app, file_path):
+    file_path = Path(file_path)
+    if not file_path.is_file():
+        return "Invalid file path"
+
     with zipfile.ZipFile(file_path, 'r') as zip_ref:
         # Find the manifest.json file in the zip file
         manifest_path = None
@@ -28,6 +33,7 @@ def process_tool_zip(app, file_path):
                 return "Invalid manifest file"
 
             tool_type = manifest_data['tool_type']
+            snake_case_name = to_snake_case(manifest_data['name'])
 
             # Extract files to a temporary folder
             temp_folder = BASE_DIR / 'temp_tools'
@@ -44,7 +50,6 @@ def process_tool_zip(app, file_path):
 
             vectorstore_file = None
             if manifest_data.get('vectorstore_init'):
-                snake_case_name = to_snake_case(manifest_data['name'])
                 vectorstore_folder = BASE_DIR / 'resources' / \
                     tool_type / 'vectorstore_initializers'
                 vectorstore_file = vectorstore_folder / \
@@ -52,14 +57,45 @@ def process_tool_zip(app, file_path):
                 shutil.move(
                     temp_folder / parent_folder / manifest_data['vectorstore_init'], vectorstore_file)
 
+            # Create a 'rest' folder with the same path as the tool and vector store
+            rest_folder = BASE_DIR / 'resources' / tool_type / 'rest'
+            rest_folder.mkdir(parents=True, exist_ok=True)
+
+            # Create a folder with the tool name in snake_case inside the 'rest' folder
+            tool_rest_folder = rest_folder / snake_case_name
+            tool_rest_folder.mkdir(parents=True, exist_ok=True)
+
+            # Move all the files from the temporary folder to the tool_rest_folder
+            for item in (temp_folder / parent_folder).iterdir():
+                if item.is_file():
+                    shutil.move(item, tool_rest_folder / item.name)
+
             # Install requirements and execute prep script if provided
-            if manifest_data.get('requirements'):
+            requirements_file = tool_rest_folder / \
+                manifest_data.get('requirements', '')
+            if manifest_data.get('requirements') and requirements_file.is_file():
                 subprocess.run([str(BASE_DIR / 'venv' / 'bin' / 'pip'), 'install',
-                                '-r', str(temp_folder / parent_folder / manifest_data['requirements'])])
+                                '-r', str(requirements_file)])
 
             if manifest_data.get('prep_script'):
-                subprocess.run([str(BASE_DIR / 'venv' / 'bin' / 'python'),
-                                str(temp_folder / parent_folder / manifest_data['prep_script'])])
+                prep_script_file = tool_rest_folder / \
+                    manifest_data.get('prep_script', '')
+
+                # Check if the prep script is a Jupyter notebook
+                if prep_script_file.suffix == '.ipynb':
+                    # Convert the Jupyter notebook to a Python script
+                    converted_script_file = prep_script_file.with_suffix('.py')
+                    with open(converted_script_file, 'w', encoding='utf-8') as converted_script:
+                        nbconvert.export(nbconvert.PythonExporter, str(
+                            prep_script_file), output=converted_script)
+
+                    # Execute the converted Python script
+                    subprocess.run(
+                        [str(BASE_DIR / 'venv' / 'bin' / 'python'), str(converted_script_file)])
+                elif prep_script_file.suffix == '.py':
+                    # Execute the Python script directly
+                    subprocess.run(
+                        [str(BASE_DIR / 'venv' / 'bin' / 'python'), str(prep_script_file)])
 
             # Add environment variables to .env file
             if manifest_data.get('env_vars'):
@@ -86,6 +122,8 @@ def validate_manifest(manifest_data):
 
 
 def add_env_vars_to_file(env_vars, file_path):
+    # Create the .env file if it doesn't exist
+    file_path.touch(exist_ok=True)
     # Read the current content of the file and store it in a set
     with open(file_path, 'r') as env_file:
         current_env_vars = set(line.strip() for line in env_file.readlines())
