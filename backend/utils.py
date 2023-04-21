@@ -1,42 +1,77 @@
 import os
 import importlib
 import sys
-from db_models import Conversation, Message, Embedding, db
+from db_models import Conversation, Message, Tool, Embedding, db
 
 
-def register_tools(root_directories, app):
-    tools = []
+def register_tools(app):
 
-    for root_directory in root_directories:
+    with app.app_context():
+        tools = []
+        # Fetch enabled tools from the database
+        enabled_tools = Tool.query.filter_by(enabled=True).all()
 
-        # Iterate through the nested directories and find .py files
-        for root, _, filenames in os.walk(root_directory):
-            for filename in filenames:
-                if not filename.endswith(".py") or filename.startswith("__"):
-                    continue
+        print(f"Registering {len(enabled_tools)} tools")
 
-                # Construct the module path and import the module
-                relative_path = os.path.relpath(root, root_directory)
-                module_path = os.path.join(
-                    relative_path, filename[:-3]).replace(os.path.sep, ".")
+        # Iterate through enabled tools and register them
+        for tool in enabled_tools:
+            # Get the tool_definition_path
+            tool_definition_path = tool.tool_definition_path
 
-                # Find the parent package name
-                parent_package = os.path.basename(
-                    os.path.dirname(os.path.dirname(root)))
-                module_path = f"{parent_package}.{module_path}"
+            # Extract the package and module names from the path
+            parent_package, module_name = os.path.split(
+                tool_definition_path[:-3].replace(os.path.sep, "."))
 
-                spec = importlib.util.spec_from_file_location(
-                    module_path, os.path.join(root, filename))
-                module = importlib.util.module_from_spec(spec)
-                sys.modules[module_path] = module
-                spec.loader.exec_module(module)
+            # Construct the module path
+            module_path = f"{parent_package}.{module_name}"
 
-                print(f"Registering tool: {module_path}")
+            # Import the module
+            spec = importlib.util.spec_from_file_location(
+                module_path, tool_definition_path)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_path] = module
+            spec.loader.exec_module(module)
 
-                tool = module.get_tool(app)
-                tools.extend(tool)
+            print(f"Registering tool: {module_path}")
 
-    return tools
+            registered_tool = module.get_tool(app)
+            tools.extend(registered_tool)
+
+        return tools
+
+# def register_tools(root_directories, app):
+#     tools = []
+
+#     for root_directory in root_directories:
+
+#         # Iterate through the nested directories and find .py files
+#         for root, _, filenames in os.walk(root_directory):
+#             for filename in filenames:
+#                 if not filename.endswith(".py") or filename.startswith("__"):
+#                     continue
+
+#                 # Construct the module path and import the module
+#                 relative_path = os.path.relpath(root, root_directory)
+#                 module_path = os.path.join(
+#                     relative_path, filename[:-3]).replace(os.path.sep, ".")
+
+#                 # Find the parent package name
+#                 parent_package = os.path.basename(
+#                     os.path.dirname(os.path.dirname(root)))
+#                 module_path = f"{parent_package}.{module_path}"
+
+#                 spec = importlib.util.spec_from_file_location(
+#                     module_path, os.path.join(root, filename))
+#                 module = importlib.util.module_from_spec(spec)
+#                 sys.modules[module_path] = module
+#                 spec.loader.exec_module(module)
+
+#                 print(f"Registering tool: {module_path}")
+
+#                 tool = module.get_tool(app)
+#                 tools.extend(tool)
+
+#     return tools
 
     # tools = []
 
@@ -102,3 +137,30 @@ def to_snake_case(name):
     name = re.sub(r'\W+', ' ', name)  # Remove any special characters
     name = name.replace(' ', '_')
     return name
+
+
+def add_core_tool(app, tool_info):
+    with app.app_context():
+        # Check if the core tool already exists
+        core_tool = Tool.query.filter_by(name=tool_info["name"]).first()
+
+        # If the core tool does not exist, create it
+        if not core_tool:
+            # Construct the dynamic path to the tool definition script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            tool_definition_path = os.path.join(
+                base_path, tool_info["tool_definition_path"]
+            )
+
+            core_tool = Tool(
+                name=tool_info["name"],
+                enabled=tool_info["enabled"],
+                core=tool_info["core"],
+                tool_type=tool_info["tool_type"],
+                tool_definition_path=tool_definition_path,
+                manifest=tool_info.get("manifest"),
+                description=tool_info["description"],
+            )
+
+            db.session.add(core_tool)
+            db.session.commit()

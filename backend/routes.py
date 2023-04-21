@@ -3,10 +3,11 @@ from langchain.memory.chat_message_histories.in_memory import ChatMessageHistory
 from langchain.memory import ConversationBufferMemory
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from datetime import datetime
+from sqlalchemy import exc
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
-from db_models import Conversation, Message, Embedding, db
+from db_models import Conversation, Message, Embedding, Tool, db
 from utils import register_tools, upsert_embeddings
 from tool_juggler import tool_juggler_agent
 from process_tool_zip import process_tool_zip
@@ -149,13 +150,14 @@ def register_routes(app):
 
         # folders = ["tools.common", "tools.private"]
         # tools = register_tools(folders, app)
-        root_directories = [
-            os.path.join(os.path.dirname(__file__),
-                         'resources', 'common', 'tools'),
-            os.path.join(os.path.dirname(__file__),
-                         'resources', 'private', 'tools'),
-        ]
-        tools = register_tools(root_directories, app)
+        # root_directories = [
+        #     os.path.join(os.path.dirname(__file__),
+        #                  'resources', 'common', 'tools'),
+        #     os.path.join(os.path.dirname(__file__),
+        #                  'resources', 'private', 'tools'),
+        # ]
+        # tools = register_tools(root_directories, app)
+        tools = register_tools(app)
 
         return Response(
             stream_with_context(
@@ -228,6 +230,52 @@ def register_routes(app):
             file.save(file_path)
             processing_result = process_tool_zip(app, file_path)
             return jsonify({'message': processing_result}), 200 if processing_result == "Tool processed successfully" else 400
+
+    @app.route('/tools', methods=['GET'])
+    def get_tools():
+        tools = Tool.query.all()
+        return jsonify([{
+            "id": tool.id,
+            "name": tool.name,
+            "enabled": tool.enabled,
+            "core": tool.core,
+            "tool_type": tool.tool_type,
+            "manifest": tool.manifest,
+            "description": tool.description,
+            "created_at": tool.created_at.isoformat(),
+            "updated_at": tool.updated_at.isoformat() if tool.updated_at else None,
+        } for tool in tools])
+
+    @app.route('/tools/<string:tool_id>/toggle', methods=['PUT'])
+    def toggle_tool(tool_id):
+        data = request.json
+        enabled = data['enabled']
+
+        print('tool_id', tool_id)
+        print('enabled', data['enabled'])
+        try:
+            tool = Tool.query.get_or_404(tool_id)
+            tool.enabled = enabled
+            db.session.commit()
+        except exc.SQLAlchemyError as e:
+            db.session.rollback()
+            app.logger.error(str(e))
+            return jsonify({"error": "An error occurred while toggling the tool."}), 500
+
+        return '', 204
+
+    # @app.route('/tools/<string:tool_id>', methods=['DELETE'])
+    # def delete_tool(tool_id):
+    #     try:
+    #         tool = Tool.query.get_or_404(tool_id)
+    #         db.session.delete(tool)
+    #         db.session.commit()
+    #     except exc.SQLAlchemyError as e:
+    #         db.session.rollback()
+    #         app.logger.error(str(e))
+    #         return jsonify({"error": "An error occurred while deleting the tool."}), 500
+
+    #     return '', 204
 
 
 def allowed_file(filename):
