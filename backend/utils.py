@@ -4,7 +4,6 @@ import sys
 from db_models import Conversation, Message, Embedding, db
 
 
-
 def register_tools(root_directories, app):
     tools = []
 
@@ -99,5 +98,7 @@ def upsert_embeddings(app, conversation_id, vectorstore, embedding_strings):
 
 def to_snake_case(name):
     import re
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+    name = name.strip().lower()
+    name = re.sub(r'\W+', ' ', name)  # Remove any special characters
+    name = name.replace(' ', '_')
+    return name

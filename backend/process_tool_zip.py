@@ -7,6 +7,7 @@ import os
 from vectorstores import add_vectorstore_to_app
 from utils import to_snake_case
 import nbconvert
+from io import StringIO
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
@@ -46,7 +47,7 @@ def process_tool_zip(app, file_path):
             # Move files to the appropriate folder structure
             destination_folder = BASE_DIR / 'resources' / tool_type / 'tools'
             shutil.move(
-                temp_folder / parent_folder / manifest_data['tool_definition'], destination_folder)
+                temp_folder / parent_folder / manifest_data['tool_definition'], destination_folder, copy_function=shutil.copy2)
 
             vectorstore_file = None
             if manifest_data.get('vectorstore_init'):
@@ -55,7 +56,7 @@ def process_tool_zip(app, file_path):
                 vectorstore_file = vectorstore_folder / \
                     f'init_vectorstore_{snake_case_name}.py'
                 shutil.move(
-                    temp_folder / parent_folder / manifest_data['vectorstore_init'], vectorstore_file)
+                    temp_folder / parent_folder / manifest_data['vectorstore_init'], vectorstore_file, copy_function=shutil.copy2)
 
             # Create a 'rest' folder with the same path as the tool and vector store
             rest_folder = BASE_DIR / 'resources' / tool_type / 'rest'
@@ -68,7 +69,8 @@ def process_tool_zip(app, file_path):
             # Move all the files from the temporary folder to the tool_rest_folder
             for item in (temp_folder / parent_folder).iterdir():
                 if item.is_file():
-                    shutil.move(item, tool_rest_folder / item.name)
+                    shutil.move(item, tool_rest_folder / item.name,
+                                copy_function=shutil.copy2)
 
             # Install requirements and execute prep script if provided
             requirements_file = tool_rest_folder / \
@@ -85,9 +87,14 @@ def process_tool_zip(app, file_path):
                 if prep_script_file.suffix == '.ipynb':
                     # Convert the Jupyter notebook to a Python script
                     converted_script_file = prep_script_file.with_suffix('.py')
+
+                    output_buffer = StringIO()
+                    nbconvert.export(nbconvert.PythonExporter, str(
+                        prep_script_file), output=output_buffer)
+
+                    # Write the output buffer content to the converted_script_file
                     with open(converted_script_file, 'w', encoding='utf-8') as converted_script:
-                        nbconvert.export(nbconvert.PythonExporter, str(
-                            prep_script_file), output=converted_script)
+                        converted_script.write(output_buffer.getvalue())
 
                     # Execute the converted Python script
                     subprocess.run(
@@ -124,13 +131,13 @@ def validate_manifest(manifest_data):
 def add_env_vars_to_file(env_vars, file_path):
     # Create the .env file if it doesn't exist
     file_path.touch(exist_ok=True)
-    # Read the current content of the file and store it in a set
+    # Read the current content of the file and store the keys in a set
     with open(file_path, 'r') as env_file:
-        current_env_vars = set(line.strip() for line in env_file.readlines())
+        current_env_vars = set(line.strip().split(
+            '=')[0] for line in env_file.readlines())
 
     # Write the new environment variables to the file if they don't already exist
     with open(file_path, 'a') as env_file:
         for env_var in env_vars:
-            env_var_key = f"{env_var}="
-            if env_var_key not in current_env_vars:
-                env_file.write(f"{env_var_key}\n")
+            if env_var not in current_env_vars:
+                env_file.write(f"{env_var}=\n")
