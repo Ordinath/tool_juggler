@@ -1,0 +1,5 @@
+{
+    "name": "Hello World",
+    "tool_type": "common",
+    "tool_definition": "hello_world.py"
+}
