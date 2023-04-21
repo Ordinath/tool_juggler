@@ -34,7 +34,6 @@ yarn-error.log*
 # *.ipynb
 **/*.db
 venv/
-**/tools/private/*
-**/data/private/*
+**/resources/private/*
 **/vectorstores/*
 __pycache__/

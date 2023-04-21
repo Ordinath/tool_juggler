@@ -65,6 +65,17 @@ export async function deleteEmbeddings(conversationId: string): Promise<void> {
     await axios.delete(`${API_URL}/conversations/${conversationId}/delete_long_term_memory_embedding`);
 }
 
+export async function uploadZipFile(file: File): Promise<any> {
+    const formData = new FormData();
+    formData.append('upload_file', file); 
+    const response: AxiosResponse<any> = await axios.post(`${API_URL}/upload_tool_zip`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data;
+}
+
 const API = {
     getConversations,
     createConversation,
@@ -76,6 +87,7 @@ const API = {
     deleteMessage,
     upsertEmbeddings,
     deleteEmbeddings,
+    uploadZipFile,
 };
 
 export default API;
