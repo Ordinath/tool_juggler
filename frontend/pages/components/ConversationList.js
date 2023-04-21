@@ -16,9 +16,9 @@ export default function ConversationList() {
                 </Button>
             </Box>
             {conversations.length > 0 && conversations.map((conversation) => <SideBarConversation key={conversation.id} {...{ conversation }} />)}
-            <Box width="100%" sx={{ paddingRight: '2rem' }}>
+            {/* <Box width="100%" sx={{ paddingRight: '2rem' }}>
                 <ZipFileDropzone />
-            </Box>
+            </Box> */}
         </>
     );
 }

@@ -24,6 +24,7 @@ export const useConversations = () => {
 
 export function ConversationProvider({ children }) {
     const [conversations, setConversations] = useState([]);
+    const [tools, setTools] = useState([]);
     const [selectedConversation, setSelectedConversation] = useState(null);
     const [conversationLoading, setConversationLoading] = useState(false);
     const [selectedConversationMessages, setSelectedConversationMessages] = useState([]);
@@ -43,6 +44,20 @@ export function ConversationProvider({ children }) {
             }
         };
         fetchConversations();
+    }, []);
+
+    // Add a new useEffect to fetch tools from the backend upon page load
+    useEffect(() => {
+        const fetchTools = async () => {
+            try {
+                const fetchedTools = await API.getTools();
+                setTools(fetchedTools);
+            } catch (error) {
+                console.error('Error fetching tools:', error);
+                setTools([]);
+            }
+        };
+        fetchTools();
     }, []);
 
     useEffect(() => {
@@ -71,6 +86,12 @@ export function ConversationProvider({ children }) {
             setConversationLoading(false);
         }
     }, [selectedConversation]);
+
+    const toggleTool = async (toolId, toolEnabled) => {
+        console.log('toggle tool', toolId, toolEnabled);
+        await API.toggleTool(toolId, toolEnabled);
+        setTools(tools.map((tool) => (tool.id === toolId ? { ...tool, enabled: !toolEnabled } : tool)));
+    };
 
     const handleAddNewConversation = async () => {
         console.log('add new conversation');
@@ -201,13 +222,20 @@ export function ConversationProvider({ children }) {
         try {
             const response = await API.uploadZipFile(zipFiles[0]);
             console.log('File upload response:', response);
+            console.log('Refreshing the toolset...');
+            const fetchedTools = await API.getTools();
+            setTools(fetchedTools);
+            return response;
         } catch (error) {
             console.error('File upload error:', error);
+            return error;
         }
     };
 
     const value = {
         conversations,
+        tools,
+        toggleTool,
         setConversations,
         selectedConversation,
         setSelectedConversation,

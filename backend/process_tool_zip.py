@@ -57,6 +57,9 @@ def process_tool_zip(app, file_path):
 
             # Move files to the appropriate folder structure
             destination_folder = BASE_DIR / 'resources' / tool_type / 'tools'
+            destination_folder.mkdir(parents=True, exist_ok=True)
+            destination_tool_definition_path = destination_folder / \
+                manifest_data['tool_definition']
             shutil.move(
                 temp_folder / parent_folder / manifest_data['tool_definition'], destination_folder, copy_function=shutil.copy2)
 
@@ -64,6 +67,7 @@ def process_tool_zip(app, file_path):
             if manifest_data.get('vectorstore_init'):
                 vectorstore_folder = BASE_DIR / 'resources' / \
                     tool_type / 'vectorstore_initializers'
+                vectorstore_folder.mkdir(parents=True, exist_ok=True)
                 vectorstore_file = vectorstore_folder / \
                     f'init_vectorstore_{snake_case_name}.py'
                 shutil.move(
@@ -131,7 +135,8 @@ def process_tool_zip(app, file_path):
                 core=False,
                 tool_type=tool_type,
                 manifest=manifest_data,
-                description=tool_description
+                description=tool_description,
+                tool_definition_path=str(destination_tool_definition_path)
             )
 
             # Remove temporary folder
@@ -174,9 +179,15 @@ def extract_tool_description(script_content):
     return None
 
 
-def add_tool_to_database(name, enabled, core, tool_type, manifest, description):
-    tool = Tool(name=name, enabled=enabled, core=core,
-                tool_type=tool_type, manifest=manifest, description=description)
-
+def add_tool_to_database(name, enabled, core, tool_type, manifest, description, tool_definition_path):
+    tool = Tool(
+        name=name,
+        enabled=enabled,
+        core=core,
+        tool_type=tool_type,
+        tool_definition_path=tool_definition_path,
+        manifest=manifest,
+        description=description
+    )
     db.session.add(tool)
     db.session.commit()

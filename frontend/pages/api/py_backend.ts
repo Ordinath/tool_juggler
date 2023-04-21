@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
-import { Conversation, Message, Role } from '../types';
+import { Conversation, Message, Role, Tool } from '../types';
 const API_URL = process.env.NEXT_PUBLIC_PY_BACKEND_API_URL;
 
 console.log('API_URL', API_URL);
@@ -67,13 +67,26 @@ export async function deleteEmbeddings(conversationId: string): Promise<void> {
 
 export async function uploadZipFile(file: File): Promise<any> {
     const formData = new FormData();
-    formData.append('upload_file', file); 
+    formData.append('upload_file', file);
     const response: AxiosResponse<any> = await axios.post(`${API_URL}/upload_tool_zip`, formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
     });
     return response.data;
+}
+
+export async function getTools(): Promise<Tool[]> {
+    const response: AxiosResponse<Tool[]> = await axios.get(`${API_URL}/tools`);
+    return response.data;
+}
+
+export async function toggleTool(toolId: string, enabled: boolean): Promise<void> {
+    await axios.put(`${API_URL}/tools/${toolId}/toggle`, { enabled: !enabled });
+}
+
+export async function deleteTool(toolId: string): Promise<void> {
+    await axios.delete(`${API_URL}/tools/${toolId}`);
 }
 
 const API = {
@@ -88,6 +101,9 @@ const API = {
     upsertEmbeddings,
     deleteEmbeddings,
     uploadZipFile,
+    getTools,
+    toggleTool,
+    deleteTool,
 };
 
 export default API;

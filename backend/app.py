@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 from db_models import db
 from routes import register_routes
 from vectorstores import register_vectorstores
+from utils import add_core_tool
+from core_tools import long_term_memory_tool
 
 load_dotenv()
 
@@ -19,8 +21,10 @@ if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
     register_vectorstores(app)
     print(app.vectorstores)
 
-register_routes(app)
 
+add_core_tool(app, long_term_memory_tool)
+
+register_routes(app)
 
 if __name__ == '__main__':
     with app.app_context():
