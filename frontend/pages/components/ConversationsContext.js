@@ -93,6 +93,14 @@ export function ConversationProvider({ children }) {
         setTools(tools.map((tool) => (tool.id === toolId ? { ...tool, enabled: !toolEnabled } : tool)));
     };
 
+    const handleDeleteTool = async (toolId) => {
+        console.log('delete tool', toolId);
+        await API.deleteTool(toolId);
+        // get the updated list of tools from the backend
+        const fetchedTools = await API.getTools();
+        setTools(fetchedTools);
+    };
+
     const createNewConversation = async () => {
         const untitledConversationCount = conversations.filter((conversation) => conversation.title.match(/Untitled( \(\d+\))?/)).length;
         const newConversationTitle = untitledConversationCount > 0 ? `Untitled (${untitledConversationCount + 1})` : 'Untitled';
@@ -253,6 +261,7 @@ export function ConversationProvider({ children }) {
         conversations,
         tools,
         toggleTool,
+        handleDeleteTool,
         setConversations,
         selectedConversation,
         setSelectedConversation,
