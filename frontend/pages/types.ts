@@ -18,3 +18,15 @@ export type Conversation = {
     messages?: Message[];
     model?: string;
 };
+
+export type Tool = {
+    id: string;
+    name: string;
+    enabled: boolean;
+    core: boolean;
+    tool_type: string;
+    manifest: Record<string, any>;
+    description: string;
+    created_at: string;
+    updated_at: string | null;
+};

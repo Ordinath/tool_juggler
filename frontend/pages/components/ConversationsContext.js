@@ -24,6 +24,7 @@ export const useConversations = () => {
 
 export function ConversationProvider({ children }) {
     const [conversations, setConversations] = useState([]);
+    const [tools, setTools] = useState([]);
     const [selectedConversation, setSelectedConversation] = useState(null);
     const [conversationLoading, setConversationLoading] = useState(false);
     const [selectedConversationMessages, setSelectedConversationMessages] = useState([]);
@@ -43,6 +44,20 @@ export function ConversationProvider({ children }) {
             }
         };
         fetchConversations();
+    }, []);
+
+    // Add a new useEffect to fetch tools from the backend upon page load
+    useEffect(() => {
+        const fetchTools = async () => {
+            try {
+                const fetchedTools = await API.getTools();
+                setTools(fetchedTools);
+            } catch (error) {
+                console.error('Error fetching tools:', error);
+                setTools([]);
+            }
+        };
+        fetchTools();
     }, []);
 
     useEffect(() => {
@@ -72,12 +87,31 @@ export function ConversationProvider({ children }) {
         }
     }, [selectedConversation]);
 
-    const handleAddNewConversation = async () => {
-        console.log('add new conversation');
-        // count number of untitled conversations via regex matching 'Untitled' and 'Untitled(n)'
+    const toggleTool = async (toolId, toolEnabled) => {
+        console.log('toggle tool', toolId, toolEnabled);
+        await API.toggleTool(toolId, toolEnabled);
+        setTools(tools.map((tool) => (tool.id === toolId ? { ...tool, enabled: !toolEnabled } : tool)));
+    };
+
+    const handleDeleteTool = async (toolId) => {
+        console.log('delete tool', toolId);
+        await API.deleteTool(toolId);
+        // get the updated list of tools from the backend
+        const fetchedTools = await API.getTools();
+        setTools(fetchedTools);
+    };
+
+    const createNewConversation = async () => {
         const untitledConversationCount = conversations.filter((conversation) => conversation.title.match(/Untitled( \(\d+\))?/)).length;
         const newConversationTitle = untitledConversationCount > 0 ? `Untitled (${untitledConversationCount + 1})` : 'Untitled';
         const newConversation = await API.createConversation(newConversationTitle);
+        return newConversation;
+    };
+
+    const handleAddNewConversation = async () => {
+        console.log('add new conversation');
+        // count number of untitled conversations via regex matching 'Untitled' and 'Untitled(n)'
+        const newConversation = await createNewConversation();
         console.log('newConversation', newConversation);
         setConversations([newConversation, ...conversations]);
         setSelectedConversation(newConversation.id);
@@ -98,14 +132,26 @@ export function ConversationProvider({ children }) {
         );
     };
 
+    const createAndSelectConversation = async () => {
+        const newConversation = await createNewConversation();
+        setConversations([newConversation, ...conversations]);
+        setSelectedConversation((prev) => newConversation.id);
+        return newConversation.id;
+    };
+
     const handleSendMessage = async (message) => {
+        let currentSelectedConversation = selectedConversation;
+        if (!selectedConversation) {
+            // if there is no selected conversation, we create a new one and use it\
+            currentSelectedConversation = await createAndSelectConversation();
+        }
         if (message) {
-            await API.createMessage(selectedConversation, 'user', message, new Date().toISOString());
+            await API.createMessage(currentSelectedConversation, 'user', message, new Date().toISOString());
             // here we also need to make the SelectedConversation be aware of the new message
-            const newConversation = await API.getConversation(selectedConversation);
+            const newConversation = await API.getConversation(currentSelectedConversation);
             setSelectedConversationMessages(newConversation.messages);
 
-            getAssistantResponse(selectedConversation);
+            await getAssistantResponse(currentSelectedConversation);
         }
     };
 
@@ -201,13 +247,21 @@ export function ConversationProvider({ children }) {
         try {
             const response = await API.uploadZipFile(zipFiles[0]);
             console.log('File upload response:', response);
+            console.log('Refreshing the toolset...');
+            const fetchedTools = await API.getTools();
+            setTools(fetchedTools);
+            return response;
         } catch (error) {
             console.error('File upload error:', error);
+            return error;
         }
     };
 
     const value = {
         conversations,
+        tools,
+        toggleTool,
+        handleDeleteTool,
         setConversations,
         selectedConversation,
         setSelectedConversation,

@@ -8,6 +8,7 @@ import themeOptions from './themeOptions';
 import ConversationList from './components/ConversationList';
 import UserInput from './components/UserInput';
 import SelectedConversation from './components/SelectedConversation';
+import ToolList from './components/ToolList';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
@@ -49,13 +50,26 @@ export default function Home() {
                                 gap=".5rem"
                                 padding=".5rem"
                                 sx={{
-                                    marginX: '5rem',
+                                    marginX: '2rem',
                                     marginY: '2rem',
-                                    // backgroundColor: 'rgba(0, 0, 0, 0.1)',
                                 }}
                             >
                                 <SelectedConversation {...{}} />
                                 <UserInput {...{}} />
+                            </Box>
+                            <Box
+                                display="flex"
+                                flexDirection="column"
+                                flexWrap="wrap"
+                                className="sidebar"
+                                width="20rem"
+                                minWidth="20rem"
+                                gap=".5rem"
+                                padding=".5rem"
+                                height="100%"
+                                sx={{ overflowY: 'auto', backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
+                            >
+                                <ToolList />
                             </Box>
                         </Box>
                     </ThemeProvider>
