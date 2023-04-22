@@ -191,3 +191,26 @@ def add_tool_to_database(name, enabled, core, tool_type, manifest, description, 
     )
     db.session.add(tool)
     db.session.commit()
+
+
+def remove_tool_files(tool):
+    manifest = tool.manifest
+    tool_type = tool.tool_type
+    tool_name = to_snake_case(manifest['name'])
+
+    # Remove tool definition file
+    tool_definition_path = Path(tool.tool_definition_path)
+    if tool_definition_path.exists():
+        tool_definition_path.unlink()
+
+    # Remove vector store initializer file (if any)
+    if manifest.get('vectorstore_init'):
+        vectorstore_file = Path(BASE_DIR, 'resources', tool_type,
+                                'vectorstore_initializers', f'init_vectorstore_{tool_name}.py')
+        if vectorstore_file.exists():
+            vectorstore_file.unlink()
+
+    # Remove rest folder
+    rest_folder = Path(BASE_DIR, 'resources', tool_type, 'rest', tool_name)
+    if rest_folder.exists():
+        shutil.rmtree(rest_folder)

@@ -10,7 +10,7 @@ from chromadb.utils import embedding_functions
 from db_models import Conversation, Message, Embedding, Tool, db
 from utils import register_tools, upsert_embeddings
 from tool_juggler import tool_juggler_agent
-from process_tool_zip import process_tool_zip
+from process_tool import process_tool_zip, remove_tool_files
 import os
 from werkzeug.utils import secure_filename
 
@@ -263,19 +263,23 @@ def register_routes(app):
             return jsonify({"error": "An error occurred while toggling the tool."}), 500
 
         return '', 204
+    
+    @app.route('/tools/<string:tool_id>', methods=['DELETE'])
+    def delete_tool(tool_id):
+        try:
+            tool = Tool.query.get_or_404(tool_id)
 
-    # @app.route('/tools/<string:tool_id>', methods=['DELETE'])
-    # def delete_tool(tool_id):
-    #     try:
-    #         tool = Tool.query.get_or_404(tool_id)
-    #         db.session.delete(tool)
-    #         db.session.commit()
-    #     except exc.SQLAlchemyError as e:
-    #         db.session.rollback()
-    #         app.logger.error(str(e))
-    #         return jsonify({"error": "An error occurred while deleting the tool."}), 500
+            # Remove tool files from the file system
+            remove_tool_files(tool)
 
-    #     return '', 204
+            db.session.delete(tool)
+            db.session.commit()
+        except exc.SQLAlchemyError as e:
+            db.session.rollback()
+            app.logger.error(str(e))
+            return jsonify({"error": "An error occurred while deleting the tool."}), 500
+
+        return '', 204
 
 
 def allowed_file(filename):
