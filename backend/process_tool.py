@@ -8,6 +8,8 @@ from vectorstores import add_vectorstore_to_app
 from utils import to_snake_case
 import nbconvert
 from io import StringIO
+import re
+from db_models import Tool, db
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
@@ -30,6 +32,15 @@ def process_tool_zip(app, file_path):
 
         try:
             manifest_data = json.loads(zip_ref.read(manifest_path))
+
+            # Extract the tool description from the tool definition file
+            tool_definition_path = os.path.join(os.path.dirname(
+                manifest_path), manifest_data['tool_definition'])
+            tool_definition_content = zip_ref.read(
+                tool_definition_path).decode("utf-8")
+            tool_description = extract_tool_description(
+                tool_definition_content)
+
             if not validate_manifest(manifest_data):
                 return "Invalid manifest file"
 
@@ -46,6 +57,9 @@ def process_tool_zip(app, file_path):
 
             # Move files to the appropriate folder structure
             destination_folder = BASE_DIR / 'resources' / tool_type / 'tools'
+            destination_folder.mkdir(parents=True, exist_ok=True)
+            destination_tool_definition_path = destination_folder / \
+                manifest_data['tool_definition']
             shutil.move(
                 temp_folder / parent_folder / manifest_data['tool_definition'], destination_folder, copy_function=shutil.copy2)
 
@@ -53,6 +67,7 @@ def process_tool_zip(app, file_path):
             if manifest_data.get('vectorstore_init'):
                 vectorstore_folder = BASE_DIR / 'resources' / \
                     tool_type / 'vectorstore_initializers'
+                vectorstore_folder.mkdir(parents=True, exist_ok=True)
                 vectorstore_file = vectorstore_folder / \
                     f'init_vectorstore_{snake_case_name}.py'
                 shutil.move(
@@ -113,6 +128,17 @@ def process_tool_zip(app, file_path):
             if vectorstore_file:
                 add_vectorstore_to_app(app, vectorstore_file)
 
+            # Add the new tool to the database
+            add_tool_to_database(
+                name=manifest_data['name'],
+                enabled=True,
+                core=False,
+                tool_type=tool_type,
+                manifest=manifest_data,
+                description=tool_description,
+                tool_definition_path=str(destination_tool_definition_path)
+            )
+
             # Remove temporary folder
             shutil.rmtree(temp_folder)
 
@@ -141,3 +167,50 @@ def add_env_vars_to_file(env_vars, file_path):
         for env_var in env_vars:
             if env_var not in current_env_vars:
                 env_file.write(f"{env_var}=\n")
+
+
+def extract_tool_description(script_content):
+    description_pattern = re.compile(
+        r"Tool\s*\([^\)]*description\s*=\s*\"([^\"]+)\"")
+    match = description_pattern.search(script_content)
+
+    if match:
+        return match.group(1)
+    return None
+
+
+def add_tool_to_database(name, enabled, core, tool_type, manifest, description, tool_definition_path):
+    tool = Tool(
+        name=name,
+        enabled=enabled,
+        core=core,
+        tool_type=tool_type,
+        tool_definition_path=tool_definition_path,
+        manifest=manifest,
+        description=description
+    )
+    db.session.add(tool)
+    db.session.commit()
+
+
+def remove_tool_files(tool):
+    manifest = tool.manifest
+    tool_type = tool.tool_type
+    tool_name = to_snake_case(manifest['name'])
+
+    # Remove tool definition file
+    tool_definition_path = Path(tool.tool_definition_path)
+    if tool_definition_path.exists():
+        tool_definition_path.unlink()
+
+    # Remove vector store initializer file (if any)
+    if manifest.get('vectorstore_init'):
+        vectorstore_file = Path(BASE_DIR, 'resources', tool_type,
+                                'vectorstore_initializers', f'init_vectorstore_{tool_name}.py')
+        if vectorstore_file.exists():
+            vectorstore_file.unlink()
+
+    # Remove rest folder
+    rest_folder = Path(BASE_DIR, 'resources', tool_type, 'rest', tool_name)
+    if rest_folder.exists():
+        shutil.rmtree(rest_folder)
