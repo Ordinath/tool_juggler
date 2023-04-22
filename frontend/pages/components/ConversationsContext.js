@@ -93,12 +93,17 @@ export function ConversationProvider({ children }) {
         setTools(tools.map((tool) => (tool.id === toolId ? { ...tool, enabled: !toolEnabled } : tool)));
     };
 
-    const handleAddNewConversation = async () => {
-        console.log('add new conversation');
-        // count number of untitled conversations via regex matching 'Untitled' and 'Untitled(n)'
+    const createNewConversation = async () => {
         const untitledConversationCount = conversations.filter((conversation) => conversation.title.match(/Untitled( \(\d+\))?/)).length;
         const newConversationTitle = untitledConversationCount > 0 ? `Untitled (${untitledConversationCount + 1})` : 'Untitled';
         const newConversation = await API.createConversation(newConversationTitle);
+        return newConversation;
+    };
+
+    const handleAddNewConversation = async () => {
+        console.log('add new conversation');
+        // count number of untitled conversations via regex matching 'Untitled' and 'Untitled(n)'
+        const newConversation = await createNewConversation();
         console.log('newConversation', newConversation);
         setConversations([newConversation, ...conversations]);
         setSelectedConversation(newConversation.id);
@@ -119,14 +124,26 @@ export function ConversationProvider({ children }) {
         );
     };
 
+    const createAndSelectConversation = async () => {
+        const newConversation = await createNewConversation();
+        setConversations([newConversation, ...conversations]);
+        setSelectedConversation((prev) => newConversation.id);
+        return newConversation.id;
+    };
+
     const handleSendMessage = async (message) => {
+        let currentSelectedConversation = selectedConversation;
+        if (!selectedConversation) {
+            // if there is no selected conversation, we create a new one and use it\
+            currentSelectedConversation = await createAndSelectConversation();
+        }
         if (message) {
-            await API.createMessage(selectedConversation, 'user', message, new Date().toISOString());
+            await API.createMessage(currentSelectedConversation, 'user', message, new Date().toISOString());
             // here we also need to make the SelectedConversation be aware of the new message
-            const newConversation = await API.getConversation(selectedConversation);
+            const newConversation = await API.getConversation(currentSelectedConversation);
             setSelectedConversationMessages(newConversation.messages);
 
-            getAssistantResponse(selectedConversation);
+            await getAssistantResponse(currentSelectedConversation);
         }
     };
 
