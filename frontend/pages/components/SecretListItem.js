@@ -17,57 +17,90 @@ export default function SecretListItem({ secret, index }) {
     const { handleUpdateSecret, handleDeleteSecret } = useConversations();
 
     return (
-        <Box key={secret.id}>
-            <Box display="flex" flexDirection="column" gap="0.5rem">
-                <TextField
-                    size="small" 
-                    label="Key" 
-                    value={secret.key} 
-                    disabled 
-                    InputProps={{ style: { fontSize: '0.7rem' } }} 
-                />
-                <TextField
-                    size="small"
-                    label="Value"
-                    disabled={!isEditing}
-                    value={isEditing ? editedValue : secret.value}
-                    onChange={(e) => setEditedValue(e.target.value)}
-                    InputProps={{ style: { fontSize: '0.7rem' } }}
-                />
-                <Box display="flex" flexDirection="row" gap="0.5rem">
-                    {isEditing || isDeleting ? (
-                        <>
-                            <IconButton
-                                edge="end"
-                                color="inherit"
-                                onClick={() => {
-                                    if (isEditing) {
-                                        handleUpdateSecret(secret.id, secret.key, editedValue);
-                                        setIsEditing(false);
-                                    } else if (isDeleting) {
-                                        handleDeleteSecret(secret.id);
-                                        setIsDeleting(false);
-                                    }
-                                }}
-                            >
-                                <DoneIcon />
-                            </IconButton>
-                            <IconButton edge="end" color="inherit" onClick={() => (isEditing ? setIsEditing(false) : setIsDeleting(false))}>
-                                <CancelIcon />
-                            </IconButton>
-                        </>
-                    ) : (
-                        <>
-                            <IconButton edge="end" color="inherit" onClick={() => setIsEditing(true)}>
-                                <EditIcon />
-                            </IconButton>
-                            <IconButton edge="end" color="inherit" onClick={() => setIsDeleting(true)}>
-                                <DeleteIcon />
-                            </IconButton>
-                        </>
-                    )}
-                </Box>
-            </Box>
+        // <Box key={secret.id} display="flex" flexDirection="row" gap="0.5rem">
+        <Box
+            key={secret.id}
+            sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginRight: '1rem',
+                gap: '0.5rem',
+            }}
+        >
+            <TextField
+                key={secret.id}
+                size="small"
+                label={secret.key}
+                sx={
+                    {
+                        // flexGrow: 12,
+                    }
+                }
+                fullWidth
+                disabled={!isEditing}
+                value={isEditing ? editedValue : secret.value}
+                onChange={(e) => setEditedValue(e.target.value)}
+                InputProps={{ sx: { fontSize: '0.8rem', padding: 0 } }}
+                InputLabelProps={{ sx: { fontSize: '0.8rem' } }}
+            />
+            {isEditing || isDeleting ? (
+                <>
+                    <IconButton
+                        sx={{
+                            fontSize: '0.8rem',
+                        }}
+                        edge="end"
+                        color="inherit"
+                        onClick={() => {
+                            if (isEditing) {
+                                handleUpdateSecret(secret.id, secret.key, editedValue);
+                                setIsEditing(false);
+                            } else if (isDeleting) {
+                                handleDeleteSecret(secret.id);
+                                setIsDeleting(false);
+                            }
+                        }}
+                    >
+                        <DoneIcon fontSize="inherit" />
+                    </IconButton>
+                    <IconButton
+                        edge="end"
+                        color="inherit"
+                        sx={{
+                            fontSize: '0.8rem',
+                        }}
+                        onClick={() => (isEditing ? setIsEditing(false) : setIsDeleting(false))}
+                    >
+                        <CancelIcon fontSize="inherit" />
+                    </IconButton>
+                </>
+            ) : (
+                <>
+                    <IconButton
+                        // size="small"
+                        edge="end"
+                        color="inherit"
+                        sx={{
+                            fontSize: '0.8rem',
+                        }}
+                        onClick={() => setIsEditing(true)}
+                    >
+                        <EditIcon fontSize="inherit" />
+                    </IconButton>
+                    <IconButton
+                        // size="small"
+                        edge="end"
+                        color="inherit"
+                        sx={{
+                            fontSize: '0.8rem',
+                        }}
+                        onClick={() => setIsDeleting(true)}
+                    >
+                        <DeleteIcon fontSize="inherit" />
+                    </IconButton>
+                </>
+            )}
         </Box>
     );
 }
