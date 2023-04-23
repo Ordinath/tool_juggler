@@ -16,7 +16,7 @@ export default function Settings() {
             flexDirection="column"
             // gap="0.5rem"
             width="100%"
-            sx={{ overflowY: 'scroll', fontSize: '0.8rem', alignSelf: 'flex-end', width: '100%' }}
+            sx={{ fontSize: '0.8rem', alignSelf: 'flex-end', width: '100%' }}
         >
             <Button
                 // variant='text'
@@ -41,7 +41,13 @@ export default function Settings() {
                 {collapsed ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
             </Button>
             <Collapse in={!collapsed}>
-                <SecretsList />
+                <Box
+                    sx={{
+                        overflowY: 'scroll',
+                    }}
+                >
+                    <SecretsList />
+                </Box>
             </Collapse>
         </Box>
     );
