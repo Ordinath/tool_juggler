@@ -9,6 +9,7 @@ import ConversationList from './components/ConversationList';
 import UserInput from './components/UserInput';
 import SelectedConversation from './components/SelectedConversation';
 import ToolList from './components/ToolList';
+import Toast from './components/Toast';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
@@ -27,6 +28,7 @@ export default function Home() {
                 </Head>
                 <main>
                     <ThemeProvider theme={darkTheme}>
+                        <Toast />
                         <CssBaseline />
                         <Box display="flex" width="100%" height="100vh">
                             <Box

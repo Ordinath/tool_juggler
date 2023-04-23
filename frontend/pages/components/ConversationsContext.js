@@ -32,6 +32,8 @@ export function ConversationProvider({ children }) {
     const [inStreamAssistantMessage, setInStreamAssistantMessage] = useState(null);
     const [inStreamAssistantAction, setInStreamAssistantAction] = useState(null);
 
+    const [toasts, setToasts] = useState([]);
+
     // fetch conversations from backend upon page load
     useEffect(() => {
         const fetchConversations = async () => {
@@ -75,17 +77,18 @@ export function ConversationProvider({ children }) {
         fetchSecrets();
     }, []);
 
+    // raise an error if there is no OPENAI_API_KEY secret in the database
+    useEffect(() => {
+        if (!secrets.find((secret) => secret.key === 'OPENAI_API_KEY')) {
+            addToast('warning', 'No OPENAI_API_KEY secret provided. Please add in the left bottom corner under Settings menu.');
+        }
+    }, []);
+
     useEffect(() => {
         const fetchMessages = async () => {
             try {
                 let fetchedConversation = await API.getConversation(selectedConversation);
                 console.log(fetchedConversation);
-                // if this is a new conversation, we add initial system message
-                // if (fetchedConversation.messages.length === 0) {
-                //     await API.createMessage(selectedConversation, 'system', SYSTEM_MESSAGE, new Date().toISOString());
-                //     fetchedConversation = await API.getConversation(selectedConversation);
-                //     // setSelectedConversationMessages([newMessage]);
-                // }
                 setSelectedConversationMessages(fetchedConversation.messages);
             } catch (error) {
                 console.error('Error fetching conversations:', error);
@@ -101,6 +104,16 @@ export function ConversationProvider({ children }) {
             setConversationLoading(false);
         }
     }, [selectedConversation]);
+
+    const addToast = (type, message) => {
+        console.log('add toast', type, message);
+        const newToast = { id: Date.now(), type, message };
+        setToasts((prevToasts) => [...prevToasts, newToast]);
+    };
+
+    const removeToast = (id) => {
+        setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
+    };
 
     const handleAddNewSecret = async (key, value) => {
         console.log('add new secret');
@@ -223,8 +236,13 @@ export function ConversationProvider({ children }) {
                 setInStreamAssistantMessage(null);
                 setSelectedConversationMessages(newConversation.messages);
             },
-            onError: (err) => {
-                console.error('Stream error:', err);
+            onError: (event) => {
+                console.log('event.data', event.data);
+                if (event.data && event.data.includes('OpenAI API key provided')) {
+                    addToast('warning', 'No OPENAI_API_KEY secret provided. Please add in the left bottom corner under Settings menu.');
+                    // setInStreamAssistantMessage(null);
+                }
+                console.error('Stream error:', event);
             },
         });
         streamHandler.start();
@@ -320,6 +338,9 @@ export function ConversationProvider({ children }) {
         handleDeleteSecret,
         handleUpdateSecret,
         isLastAssistantMessage,
+        toasts,
+        addToast,
+        removeToast,
     };
 
     return <ConversationsContext.Provider value={value}>{children}</ConversationsContext.Provider>;
