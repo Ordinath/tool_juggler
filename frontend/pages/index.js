@@ -12,6 +12,7 @@ import ToolList from './components/ToolList';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
+import Settings from './components/Settings';
 
 const darkTheme = createTheme(themeOptions);
 
@@ -31,16 +32,18 @@ export default function Home() {
                             <Box
                                 display="flex"
                                 flexDirection="column"
-                                flexWrap="wrap"
+                                // flexWrap="wrap"
                                 className="sidebar"
                                 width="20rem"
                                 minWidth="20rem"
                                 gap=".5rem"
                                 padding=".5rem"
-                                height="100%"
-                                sx={{ overflowY: 'auto', backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
+                                // height="100%"
+                                sx={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
+                                // sx={{ overflowY: 'scroll', backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
                             >
                                 <ConversationList {...{}} />
+                                <Settings />
                             </Box>
                             <Box
                                 display="flex"

@@ -10,6 +10,7 @@ import nbconvert
 from io import StringIO
 import re
 from db_models import Tool, db
+from utils import create_secret, get_secret_value
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
@@ -121,8 +122,10 @@ def process_tool_zip(app, file_path):
 
             # Add environment variables to .env file
             if manifest_data.get('env_vars'):
-                add_env_vars_to_file(
-                    manifest_data['env_vars'], BASE_DIR / '.env')
+                # add_env_vars_to_file(
+                #     manifest_data['env_vars'], BASE_DIR / '.env')
+                add_env_vars_to_database(
+                    manifest_data['env_vars'], tool_rest_folder / '.env')
 
             # Add the new vectorstore to the Flask application context
             if vectorstore_file:
@@ -152,6 +155,23 @@ def process_tool_zip(app, file_path):
 def validate_manifest(manifest_data):
     required_keys = {'name', 'tool_type', 'tool_definition'}
     return all(key in manifest_data for key in required_keys)
+
+
+def add_env_vars_to_database(env_vars, env_file_path):
+    tool_env_vars = {}
+    if env_file_path.exists():
+        with env_file_path.open() as f:
+            for line in f:
+                name, value = line.strip().split('=', 1)
+                tool_env_vars[name] = value
+
+    for var_name in env_vars:
+        if get_secret_value(var_name) is None:
+            env_value = tool_env_vars.get(var_name)
+            if env_value is not None:
+                create_secret(var_name, env_value)
+            else:
+                create_secret(var_name, 'TO_BE_PROVIDED')
 
 
 def add_env_vars_to_file(env_vars, file_path):

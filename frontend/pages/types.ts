@@ -30,3 +30,9 @@ export type Tool = {
     created_at: string;
     updated_at: string | null;
 };
+
+export interface Secret {
+    id: string;
+    key: string;
+    value?: string;
+}

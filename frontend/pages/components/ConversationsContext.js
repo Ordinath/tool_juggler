@@ -25,6 +25,7 @@ export const useConversations = () => {
 export function ConversationProvider({ children }) {
     const [conversations, setConversations] = useState([]);
     const [tools, setTools] = useState([]);
+    const [secrets, setSecrets] = useState([]);
     const [selectedConversation, setSelectedConversation] = useState(null);
     const [conversationLoading, setConversationLoading] = useState(false);
     const [selectedConversationMessages, setSelectedConversationMessages] = useState([]);
@@ -60,6 +61,20 @@ export function ConversationProvider({ children }) {
         fetchTools();
     }, []);
 
+    // Fetch secrets from backend upon page load
+    useEffect(() => {
+        const fetchSecrets = async () => {
+            try {
+                const fetchedSecrets = await API.getSecrets();
+                setSecrets(fetchedSecrets);
+            } catch (error) {
+                console.error('Error fetching secrets:', error);
+                setSecrets([]);
+            }
+        };
+        fetchSecrets();
+    }, []);
+
     useEffect(() => {
         const fetchMessages = async () => {
             try {
@@ -86,6 +101,26 @@ export function ConversationProvider({ children }) {
             setConversationLoading(false);
         }
     }, [selectedConversation]);
+
+    const handleAddNewSecret = async (key, value) => {
+        console.log('add new secret');
+        const newSecret = await API.createSecret(key, value);
+        console.log('newSecret', newSecret);
+        const newSecrets = await API.getSecrets();
+        setSecrets(newSecrets);
+    };
+
+    const handleDeleteSecret = async (secretId) => {
+        console.log('delete secret', secretId);
+        await API.deleteSecret(secretId);
+        setSecrets(secrets.filter((secret) => secret.id !== secretId));
+    };
+
+    const handleUpdateSecret = async (secretId, key, value) => {
+        console.log('update secret', secretId);
+        const updatedSecret = await API.updateSecret(secretId, key, value);
+        setSecrets(secrets.map((secret) => (secret.id === secretId ? updatedSecret : secret)));
+    };
 
     const toggleTool = async (toolId, toolEnabled) => {
         console.log('toggle tool', toolId, toolEnabled);
@@ -166,18 +201,12 @@ export function ConversationProvider({ children }) {
             endpoint,
             assistant_message_id: newAssistantMessage.id,
             onMessage: (text, streamText) => {
-                // console.log('onMessage:', { text, streamText });
-                // if text matches /\[\[(.*?)\]\]/ an action was sent from the backend
                 const regex = /\[\[(.*?)\]\]/;
                 const match = text.match(regex);
                 if (match) {
                     const action = match[1];
-                    // console.log('action', action);
-                    // console.log('inStreamAssistantAction', inStreamAssistantAction);
                     setInStreamAssistantAction(action);
                 } else {
-                    // console.log('streamText', streamText);
-                    // console.log('inStreamAssistantAction', inStreamAssistantAction);
                     setInStreamAssistantAction((prev) => {
                         if (prev) {
                             // console.log('setInStreamAssistantAction UNSETTING');
@@ -250,6 +279,9 @@ export function ConversationProvider({ children }) {
             console.log('Refreshing the toolset...');
             const fetchedTools = await API.getTools();
             setTools(fetchedTools);
+            // refresh the secrets
+            const fetchedSecrets = await API.getSecrets();
+            setSecrets(fetchedSecrets);
             return response;
         } catch (error) {
             console.error('File upload error:', error);
@@ -260,6 +292,7 @@ export function ConversationProvider({ children }) {
     const value = {
         conversations,
         tools,
+        secrets,
         toggleTool,
         handleDeleteTool,
         setConversations,
@@ -283,6 +316,9 @@ export function ConversationProvider({ children }) {
         handleRegenerateMessage,
         handleUpsertConversationEmbeddings,
         handleDeleteConversationEmbeddings,
+        handleAddNewSecret,
+        handleDeleteSecret,
+        handleUpdateSecret,
         isLastAssistantMessage,
     };
 

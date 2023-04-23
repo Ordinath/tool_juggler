@@ -1,7 +1,25 @@
 import os
 import importlib
 import sys
-from db_models import Conversation, Message, Tool, Embedding, db
+from db_models import Conversation, Message, Tool, Embedding, Secret, db
+from crypto_utils import encrypt, decrypt
+from flask import current_app
+
+
+def create_secret(key, value):
+    with current_app.app_context():
+        encrypted_value = encrypt(value)
+        new_secret = Secret(key=key, value=encrypted_value)
+        db.session.add(new_secret)
+        db.session.commit()
+
+
+def get_secret_value(key):
+    with current_app.app_context():
+        secret = Secret.query.filter_by(key=key).first()
+        if secret:
+            return decrypt(secret.value)
+        return None
 
 
 def register_tools(app):
@@ -38,6 +56,7 @@ def register_tools(app):
             tools.extend(registered_tool)
 
         return tools
+
 
 def upsert_embeddings(app, conversation_id, vectorstore, embedding_strings):
     new_embeddings = []
