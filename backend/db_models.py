@@ -57,3 +57,10 @@ class Tool(db.Model):
     updated_at = db.Column(db.DateTime, nullable=True,
                            onupdate=datetime.utcnow)
 
+
+class Secret(db.Model):
+    id = db.Column(db.String(36),
+                   primary_key=True,
+                   default=lambda: str(uuid.uuid4()))
+    key = db.Column(db.String(255), nullable=False, unique=True)
+    value = db.Column(db.Text, nullable=False)

@@ -1,7 +1,6 @@
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import SideBarConversation from './SideBarConversation';
-import ZipFileDropzone from './ZipFileDropzone';
 
 import { useConversations } from './ConversationsContext';
 
@@ -9,17 +8,14 @@ export default function ConversationList() {
     const { conversations, handleAddNewConversation } = useConversations();
 
     return (
-        <>
+        <Box display="flex" flexDirection="column" gap=".5rem" width="100%" sx={{ overflowY: 'scroll', flexGrow: 1 }}>
             <Box width="100%" sx={{ paddingRight: '2rem' }}>
                 <Button variant="outlined" fullWidth onClick={handleAddNewConversation}>
                     New conversation
                 </Button>
             </Box>
             {conversations.length > 0 && conversations.map((conversation) => <SideBarConversation key={conversation.id} {...{ conversation }} />)}
-            {/* <Box width="100%" sx={{ paddingRight: '2rem' }}>
-                <ZipFileDropzone />
-            </Box> */}
-        </>
+        </Box>
     );
 }
 
