@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { StreamHandler } from '../api/stream_handler';
+import { useClientSideState } from '../hooks/useClientSideState';
 const API_URL = process.env.NEXT_PUBLIC_PY_BACKEND_API_URL;
 
 import API from '../api/py_backend';
@@ -23,6 +24,11 @@ export const useConversations = () => {
 };
 
 export function ConversationProvider({ children }) {
+    const MODELS = [
+        { name: 'GPT-4 (recommended)', value: 'gpt-4' },
+        { name: 'GPT-3.5-TURBO', value: 'gpt-3.5-turbo' },
+    ];
+    const [selectedModel, setSelectedModel] = useClientSideState('selectedModel', MODELS[0].value);
     const [conversations, setConversations] = useState([]);
     const [tools, setTools] = useState([]);
     const [secrets, setSecrets] = useState([]);
@@ -69,6 +75,9 @@ export function ConversationProvider({ children }) {
             try {
                 const fetchedSecrets = await API.getSecrets();
                 setSecrets(fetchedSecrets);
+                if (!fetchedSecrets.find((secret) => secret.key === 'OPENAI_API_KEY')) {
+                    addToast('warning', 'No OPENAI_API_KEY secret provided. Please add in the left bottom corner under Settings menu.');
+                }
             } catch (error) {
                 console.error('Error fetching secrets:', error);
                 setSecrets([]);
@@ -77,12 +86,9 @@ export function ConversationProvider({ children }) {
         fetchSecrets();
     }, []);
 
-    // raise an error if there is no OPENAI_API_KEY secret in the database
     useEffect(() => {
-        if (!secrets.find((secret) => secret.key === 'OPENAI_API_KEY')) {
-            addToast('warning', 'No OPENAI_API_KEY secret provided. Please add in the left bottom corner under Settings menu.');
-        }
-    }, []);
+        localStorage.setItem('selectedModel', JSON.stringify(selectedModel));
+    }, [selectedModel]);
 
     useEffect(() => {
         const fetchMessages = async () => {
@@ -208,9 +214,10 @@ export function ConversationProvider({ children }) {
         let newAssistantMessage = await API.createMessage(selectedConversation, 'assistant', '\n', new Date().toISOString());
         setInStreamAssistantMessage(newAssistantMessage);
         const endpoint = `${API_URL}/conversations/${selectedConversation}/get_ai_completion`;
+        console.log('selectedModel', selectedModel.value);
         const streamHandler = new StreamHandler({
-            model: 'gpt-4', // 'gpt-3.5-turbo', 'gpt-4'
-            // model: 'gpt-3.5-turbo', // 'gpt-3.5-turbo', 'gpt-4'
+            model: selectedModel,
+            // model: 'gpt-4', // 'gpt-3.5-turbo', 'gpt-4'
             endpoint,
             assistant_message_id: newAssistantMessage.id,
             onMessage: (text, streamText) => {
@@ -308,6 +315,9 @@ export function ConversationProvider({ children }) {
     };
 
     const value = {
+        MODELS,
+        selectedModel,
+        setSelectedModel,
         conversations,
         tools,
         secrets,
