@@ -1,0 +1,12 @@
+{
+    "name": "${tool_name}",
+    "version": "0.1",
+    "tool_type": "private",
+    "tool_definition": "${pdf_snake_case_name}.py",
+    "vectorstore_init": "init_vectorstore_${pdf_snake_case_name}.py",
+    "requirements": "requirements.txt",
+    "prep_script": "prepare_pdf_${pdf_snake_case_name}.py",
+    "env_vars": [
+        "OPENAI_API_KEY"
+    ]
+}

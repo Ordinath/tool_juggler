@@ -1,18 +1,15 @@
 from langchain.document_loaders import PyPDFLoader
-import chromadb
-from chromadb.config import Settings
-from chromadb.utils import embedding_functions
 import os
-import sys
-# add the utils directory to the path
-utils_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
-sys.path.insert(0, utils_directory)
-# get_secret_value is the function to be used within all tool components to get secrets
-from utils import get_secret_value
+import chromadb
+from chromadb.utils import embedding_functions
+from chromadb.config import Settings
+
+from ...utils import get_secret_value
+
 
 current_file_path = os.path.dirname(os.path.abspath(__file__))
 persist_directory = os.path.join(
-    current_file_path, '..', '..', 'vectorstores', 'how_close_is_chatgpt_to_human_experts')
+    current_file_path, '..', '..', 'vectorstores', '${pdf_snake_case_name}')
 
 client = chromadb.Client(Settings(
     chroma_db_impl="duckdb+parquet",
@@ -23,11 +20,11 @@ embedding_function = embedding_functions.OpenAIEmbeddingFunction(
     model_name="text-embedding-ada-002", api_key=get_secret_value("OPENAI_API_KEY"))
 
 collection = client.get_or_create_collection(
-    name="how_close_is_chatgpt_to_human_experts", embedding_function=embedding_function)
+    name="${pdf_snake_case_name}", embedding_function=embedding_function)
 
 # Calculate the absolute path of the PDF file
 pdf_path = os.path.join(
-    current_file_path, "How_Close_is_ChatGPT_to_Human_Experts.pdf")
+    current_file_path, "${pdf_file_name}")
 loader = PyPDFLoader(pdf_path)
 pages = loader.load_and_split()
 print(pages[0])

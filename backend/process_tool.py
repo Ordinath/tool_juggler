@@ -5,12 +5,13 @@ from pathlib import Path
 import subprocess
 import os
 from vectorstores import add_vectorstore_to_app
-from utils import to_snake_case
+from utils import to_snake_case, normalize_string
 import nbconvert
 from io import StringIO
 import re
 from db_models import Tool, db
 from utils import create_secret, get_secret_value
+from string import Template
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
@@ -98,6 +99,8 @@ def process_tool_zip(app, file_path):
             if manifest_data.get('prep_script'):
                 prep_script_file = tool_rest_folder / \
                     manifest_data.get('prep_script', '')
+                
+                print('attempting to execute prep script: ', prep_script_file)
 
                 # Check if the prep script is a Jupyter notebook
                 if prep_script_file.suffix == '.ipynb':
@@ -174,21 +177,6 @@ def add_env_vars_to_database(env_vars, env_file_path):
                 create_secret(var_name, 'TO_BE_PROVIDED')
 
 
-def add_env_vars_to_file(env_vars, file_path):
-    # Create the .env file if it doesn't exist
-    file_path.touch(exist_ok=True)
-    # Read the current content of the file and store the keys in a set
-    with open(file_path, 'r') as env_file:
-        current_env_vars = set(line.strip().split(
-            '=')[0] for line in env_file.readlines())
-
-    # Write the new environment variables to the file if they don't already exist
-    with open(file_path, 'a') as env_file:
-        for env_var in env_vars:
-            if env_var not in current_env_vars:
-                env_file.write(f"{env_var}=\n")
-
-
 def extract_tool_description(script_content):
     description_pattern = re.compile(
         r"Tool\s*\([^\)]*description\s*=\s*\"([^\"]+)\"")
@@ -234,3 +222,77 @@ def remove_tool_files(tool):
     rest_folder = Path(BASE_DIR, 'resources', tool_type, 'rest', tool_name)
     if rest_folder.exists():
         shutil.rmtree(rest_folder)
+
+
+def create_pdf_tool_zip(pdf_file_path):
+
+    # Extract the tool name from the file name
+    pdf_file_name = os.path.splitext(os.path.basename(pdf_file_path))[0]
+    print('pdf_file_name', pdf_file_name)
+    pdf_tool_name = normalize_string(pdf_file_name)
+    print('pdf_tool_name', pdf_tool_name)
+    pdf_snake_case_name = to_snake_case(pdf_tool_name)
+    print('pdf_snake_case_name', pdf_snake_case_name)
+
+    # Create the PDF tool directory
+    os.makedirs(f'temp/{pdf_tool_name}', exist_ok=True)
+
+    # write the PDF file to the tool directory
+    shutil.copy(pdf_file_path, f'temp/{pdf_tool_name}/{pdf_file_name}.pdf')
+
+    # Read the templates and auto-generate the required files
+    with open('tool_templates/pdf/manifest_template.json', 'r') as f:
+        manifest_template = Template(f.read())
+    with open('tool_templates/pdf/requirements_template.txt', 'r') as f:
+        requirements_template = Template(f.read())
+    with open('tool_templates/pdf/prepare_pdf_vectorstore_template.py', 'r') as f:
+        prep_script_template = Template(f.read())
+    with open('tool_templates/pdf/init_vectorstore_template.py', 'r') as f:
+        vectorstore_init_template = Template(f.read())
+    with open('tool_templates/pdf/tool_definition_template.py', 'r') as f:
+        tool_definition_template = Template(f.read())
+
+    # Generate the manifest file
+    manifest_content = manifest_template.substitute(
+        tool_name=pdf_tool_name, pdf_snake_case_name=pdf_snake_case_name)
+    with open(f'temp/{pdf_tool_name}/manifest.json', 'w') as f:
+        f.write(manifest_content)
+
+    # Generate the requirements file
+    requirements_content = requirements_template.substitute()
+    with open(f'temp/{pdf_tool_name}/requirements.txt', 'w') as f:
+        f.write(requirements_content)
+
+    # Generate the prepare_pdf_vectorstore file
+    prep_script_content = prep_script_template.substitute(
+        pdf_snake_case_name=pdf_snake_case_name, pdf_file_name=pdf_file_name)
+    with open(f'temp/{pdf_tool_name}/prepare_pdf_{pdf_snake_case_name}.py', 'w') as f:
+        f.write(prep_script_content)
+
+    # Generate the init_vectorstore file
+    vectorstore_init_content = vectorstore_init_template.substitute(
+        pdf_snake_case_name=pdf_snake_case_name)
+    with open(f'temp/{pdf_tool_name}/init_vectorstore_{pdf_snake_case_name}.py', 'w') as f:
+        f.write(vectorstore_init_content)
+
+    # Generate the tool definition file
+    tool_definition_content = tool_definition_template.substitute(
+        pdf_snake_case_name=pdf_snake_case_name, pdf_tool_name=pdf_tool_name)
+    with open(f'temp/{pdf_tool_name}/{pdf_snake_case_name}.py', 'w') as f:
+        f.write(tool_definition_content)
+
+    # Archive the generated PDF tool as a zip file
+    zip_path = f"resources/tool_packages/pdf_{pdf_tool_name}.zip"
+    with zipfile.ZipFile(zip_path, 'w') as zf:
+        for folder_name, subfolders, filenames in os.walk(f'temp/{pdf_tool_name}'):
+            for filename in filenames:
+                # Create the complete file path
+                file_path = os.path.join(folder_name, filename)
+                # Add the file to the zip archive
+                zf.write(file_path, os.path.relpath(
+                    file_path, f'temp/{pdf_tool_name}'))
+
+    # Clean up the temporary folder
+    shutil.rmtree(f'temp/{pdf_tool_name}')
+
+    return os.path.abspath(zip_path)

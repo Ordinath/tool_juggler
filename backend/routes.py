@@ -10,7 +10,7 @@ from chromadb.utils import embedding_functions
 from db_models import Conversation, Message, Embedding, Tool, Secret, db
 from utils import register_tools, upsert_embeddings
 from tool_juggler import tool_juggler_agent
-from process_tool import process_tool_zip, remove_tool_files
+from process_tool import process_tool_zip, remove_tool_files, create_pdf_tool_zip
 import os
 from werkzeug.utils import secure_filename
 from functools import wraps
@@ -217,11 +217,16 @@ def register_routes(app):
             return jsonify({'error': 'No selected file'}), 400
 
         if file and allowed_file(file.filename):
+            file_extension = file.filename.rsplit('.', 1)[1].lower()
             filename = secure_filename(file.filename)
             file_path = os.path.join('resources', 'tool_packages', filename)
             dir_path = os.path.dirname(file_path)
             os.makedirs(dir_path, exist_ok=True)
             file.save(file_path)
+
+            if (file_extension == "pdf"):
+                file_path = create_pdf_tool_zip(file_path)
+
             processing_result = process_tool_zip(app, file_path)
             return jsonify({'message': processing_result}), 200 if processing_result == "Tool processed successfully" else 400
 
@@ -321,8 +326,13 @@ def register_routes(app):
         return {"error": str(e)}, 500
 
 
+def allowed_extension(extension):
+    ALLOWED_EXTENSIONS = {'zip', 'pdf'}
+    return extension in ALLOWED_EXTENSIONS
+
+
 def allowed_file(filename):
-    ALLOWED_EXTENSIONS = {'zip'}
+    ALLOWED_EXTENSIONS = {'zip', 'pdf'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
