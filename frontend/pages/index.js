@@ -14,10 +14,15 @@ import Toast from './components/Toast';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Settings from './components/Settings';
+import { useHasMounted } from './hooks/useHasMounted';
 
 const darkTheme = createTheme(themeOptions);
 
 export default function Home() {
+    const hasMounted = useHasMounted();
+    if (!hasMounted) {
+        return null;
+    }
     return (
         <>
             <ConversationProvider>

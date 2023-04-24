@@ -9,19 +9,35 @@ import AddIcon from '@mui/icons-material/Add';
 import { useConversations } from './ConversationsContext';
 import { Typography } from '@mui/material';
 
-export default function SecretsList() {
+export default function SecretsListSetting() {
     const { secrets, handleAddNewSecret } = useConversations();
 
     const [newSecretKey, setNewSecretKey] = useState('');
     const [newSecretValue, setNewSecretValue] = useState('');
 
     return (
-        <Box display="flex" flexDirection="column" gap="0.5rem" width="100%">
-            <Typography>Secrets</Typography>
+        <Box
+            display="flex"
+            flexDirection="column"
+            gap="0.5rem"
+            width="100%"
+            sx={{
+                borderTop: '1px solid #e0e0e0',
+                borderBottom: '1px solid #e0e0e0',
+                paddingY: '0.5rem',
+            }}
+        >
+            <Typography
+                sx={{
+                    textAlign: 'center',
+                }}
+            >
+                Secrets
+            </Typography>
             {secrets && secrets.map((secret, index) => <SecretListItem key={secret.id} secret={secret} index={index} />)}
             <Box
                 sx={{
-                    borderTop: '1px solid #e0e0e0',
+                    // borderTop: '1px solid #e0e0e0',
                     paddingTop: '0.5rem',
                     display: 'flex',
                     flexDirection: 'column',
