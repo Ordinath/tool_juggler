@@ -50,36 +50,36 @@ replace broken code in langchain library (to properly recognize chat model strea
 open base.py and replace the following code:
 
 ```
-return self._generate(messages, stop=stop).generations[0].message # line 128
+        return self._generate(messages, stop=stop).generations[0].message
 ```
 
 with
 
 ```
-output = self._generate(messages, stop=stop)
-self.callback_manager.on_llm_end(output, verbose=self.verbose)
-return output.generations[0].message
+        output = self._generate(messages, stop=stop)
+        self.callback_manager.on_llm_end(output, verbose=self.verbose)
+        return output.generations[0].message
 ```
 
 replace broken code in chroma library (to intake optional embedding_function parameter):
 
 ```cd venv/lib/python3.10/site-packages/chromadb/api```
 
-open __init__.py and replace the following code:
+open __init__.py and replace the following code on line 85:
 
 ```
-def get_or_create_collection(self, name: str, metadata: Optional[Dict] = None) -> Collection: # line 85
+    def get_or_create_collection(self, name: str, metadata: Optional[Dict] = None) -> Collection:
 ```
 
 with
 
 ```
-def get_or_create_collection(
-    self,
-    name: str,
-    metadata: Optional[Dict] = None,
-    embedding_function: Optional[Callable] = None,
-    ) -> Collection:
+    def get_or_create_collection(
+        self,
+        name: str,
+        metadata: Optional[Dict] = None,
+        embedding_function: Optional[Callable] = None,
+        ) -> Collection:
 ```
 
 to launch:
