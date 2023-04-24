@@ -45,22 +45,18 @@ export default function SideBarConversation({ conversation }) {
     }, [selectedConversation]);
 
     return (
-        <Box key={conversation.id} className="sidebar-conversation" width="100%" sx={{ position: 'relative', paddingRight: '2rem' }}>
+        <Box display="flex" flexDirection="column" gap="0.5rem" width="100%" sx={{ position: 'relative', paddingRight: '2rem' }}>
             {selectedConversation !== conversation.id ? (
-                <Box width="100%">
-                    <Button
-                        sx={{
-                            paddingY: '0.375rem',
-                        }}
-                        variant="outlined"
-                        fullWidth
-                        onClick={() => {
-                            setSelectedConversation(conversation.id);
-                        }}
-                    >
-                        {conversation.title}
-                    </Button>
-                </Box>
+                <Button
+                    sx={{ paddingY: '0.375rem' }}
+                    variant="outlined"
+                    fullWidth
+                    onClick={() => {
+                        setSelectedConversation(conversation.id);
+                    }}
+                >
+                    {conversation.title}
+                </Button>
             ) : (
                 <Grid container spacing={1} alignItems="flex-end">
                     <Grid item xs={12}>
@@ -207,7 +203,7 @@ export default function SideBarConversation({ conversation }) {
                     fontSize: '0.9rem',
                     position: 'absolute',
                     bottom: 5.5,
-                    left: 277,
+                    left: 270,
                 }}
             >
                 {conversation.embedded ? <TurnedInIcon fontSize="inherit" color="primary" /> : <TurnedInNotIcon fontSize="inherit" color="warning" />}

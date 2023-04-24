@@ -8,7 +8,7 @@ export interface StreamHandlerOptions {
     assistant_message_id: string;
     // messages: { role: string; content: string }[];
     onMessage: (msg: string, streamText: string) => void;
-    onError: (err: Error) => void;
+    onError: (event: any) => void;
     onFinish: (streamText: string) => void;
 }
 
@@ -84,8 +84,9 @@ export class StreamHandler {
     }
 
     private handleError(event: Event) {
-        const err = new Error('Error during streaming');
-        this.options.onError(err);
+        // console.error(event);
+        // const err = new Error('Error during streaming');
+        this.options.onError(event);
         this.stop();
     }
 }

@@ -7,12 +7,15 @@ from sqlalchemy import exc
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
-from db_models import Conversation, Message, Embedding, Tool, db
+from db_models import Conversation, Message, Embedding, Tool, Secret, db
 from utils import register_tools, upsert_embeddings
 from tool_juggler import tool_juggler_agent
 from process_tool import process_tool_zip, remove_tool_files
 import os
 from werkzeug.utils import secure_filename
+from functools import wraps
+from werkzeug.exceptions import HTTPException
+from crypto_utils import encrypt, decrypt
 
 # app.config['UPLOAD_FOLDER'] = 'path/to/your/upload/directory'
 
@@ -148,15 +151,6 @@ def register_routes(app):
                                           return_messages=True,
                                           chat_memory=message_history)
 
-        # folders = ["tools.common", "tools.private"]
-        # tools = register_tools(folders, app)
-        # root_directories = [
-        #     os.path.join(os.path.dirname(__file__),
-        #                  'resources', 'common', 'tools'),
-        #     os.path.join(os.path.dirname(__file__),
-        #                  'resources', 'private', 'tools'),
-        # ]
-        # tools = register_tools(root_directories, app)
         tools = register_tools(app)
 
         return Response(
@@ -263,7 +257,7 @@ def register_routes(app):
             return jsonify({"error": "An error occurred while toggling the tool."}), 500
 
         return '', 204
-    
+
     @app.route('/tools/<string:tool_id>', methods=['DELETE'])
     def delete_tool(tool_id):
         try:
@@ -281,7 +275,60 @@ def register_routes(app):
 
         return '', 204
 
+    @app.route('/secrets', methods=['GET', 'POST'])
+    @require_auth
+    def secrets():
+        if request.method == 'POST':
+            data = request.json
+            encrypted_value = encrypt(data['value'])
+            new_secret = Secret(key=data['key'], value=encrypted_value)
+            db.session.add(new_secret)
+            db.session.commit()
+            return jsonify({"id": new_secret.id, "key": new_secret.key}), 201
+
+        secrets = Secret.query.all()
+        return jsonify([{"id": secret.id, "key": secret.key, "value": decrypt(secret.value)} for secret in secrets])
+
+    @app.route('/secrets/<string:secret_id>', methods=['GET', 'PUT', 'DELETE'])
+    @require_auth
+    def secret(secret_id):
+        secret = Secret.query.get_or_404(secret_id)
+
+        if request.method == 'GET':
+            decrypted_value = decrypt(secret.value)
+            return jsonify({"id": secret.id, "key": secret.key, "value": decrypted_value})
+
+        if request.method == 'PUT':
+            data = request.json
+            secret.key = data['key']
+            secret.value = encrypt(data['value'])
+            db.session.commit()
+            return jsonify({"id": secret.id, "key": secret.key, "value": data['value']})
+
+        if request.method == 'DELETE':
+            db.session.delete(secret)
+            db.session.commit()
+            return '', 204
+
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        # handle OpenAI API key not found error
+        if isinstance(e, ValueError) and "Did not find openai_api_key" in str(e):
+            return {"error": "OpenAI API key not found."}, 400
+        # handle other exceptions
+        if isinstance(e, HTTPException):
+            return e.get_response()
+        return {"error": str(e)}, 500
+
 
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'zip'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def require_auth(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # Implement authentication and authorization here
+        return func(*args, **kwargs)
+    return wrapper

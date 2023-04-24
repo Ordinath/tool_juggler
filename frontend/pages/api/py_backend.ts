@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
-import { Conversation, Message, Role, Tool } from '../types';
+import { Conversation, Message, Role, Tool, Secret } from '../types';
 const API_URL = process.env.NEXT_PUBLIC_PY_BACKEND_API_URL;
 
 console.log('API_URL', API_URL);
@@ -89,6 +89,36 @@ export async function deleteTool(toolId: string): Promise<void> {
     await axios.delete(`${API_URL}/tools/${toolId}`);
 }
 
+// Get all secrets
+export async function getSecrets(): Promise<Secret[]> {
+    const response: AxiosResponse<Secret[]> = await axios.get(`${API_URL}/secrets`);
+    console.log('get Secrets response.data', response.data);
+    return response.data;
+}
+
+// Get secret by ID
+export async function getSecret(secretId: string): Promise<Secret> {
+    const response: AxiosResponse<Secret> = await axios.get(`${API_URL}/secrets/${secretId}`);
+    return response.data;
+}
+
+// Create secret
+export async function createSecret(key: string, value: string): Promise<Secret> {
+    const response: AxiosResponse<Secret> = await axios.post(`${API_URL}/secrets`, { key, value });
+    return response.data;
+}
+
+// Update secret
+export async function updateSecret(secretId: string, key: string, value: string): Promise<Secret> {
+    const response: AxiosResponse<Secret> = await axios.put(`${API_URL}/secrets/${secretId}`, { key, value });
+    return response.data;
+}
+
+// Delete secret
+export async function deleteSecret(secretId: string): Promise<void> {
+    await axios.delete(`${API_URL}/secrets/${secretId}`);
+}
+
 const API = {
     getConversations,
     createConversation,
@@ -104,6 +134,11 @@ const API = {
     getTools,
     toggleTool,
     deleteTool,
+    getSecrets,
+    getSecret,
+    createSecret,
+    updateSecret,
+    deleteSecret,
 };
 
 export default API;

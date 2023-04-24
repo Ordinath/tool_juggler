@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { StreamHandler } from '../api/stream_handler';
+import { useClientSideState } from '../hooks/useClientSideState';
 const API_URL = process.env.NEXT_PUBLIC_PY_BACKEND_API_URL;
 
 import API from '../api/py_backend';
@@ -23,13 +24,21 @@ export const useConversations = () => {
 };
 
 export function ConversationProvider({ children }) {
+    const MODELS = [
+        { name: 'GPT-4 (recommended)', value: 'gpt-4' },
+        { name: 'GPT-3.5-TURBO', value: 'gpt-3.5-turbo' },
+    ];
+    const [selectedModel, setSelectedModel] = useClientSideState('selectedModel', MODELS[0].value);
     const [conversations, setConversations] = useState([]);
     const [tools, setTools] = useState([]);
+    const [secrets, setSecrets] = useState([]);
     const [selectedConversation, setSelectedConversation] = useState(null);
     const [conversationLoading, setConversationLoading] = useState(false);
     const [selectedConversationMessages, setSelectedConversationMessages] = useState([]);
     const [inStreamAssistantMessage, setInStreamAssistantMessage] = useState(null);
     const [inStreamAssistantAction, setInStreamAssistantAction] = useState(null);
+
+    const [toasts, setToasts] = useState([]);
 
     // fetch conversations from backend upon page load
     useEffect(() => {
@@ -60,17 +69,32 @@ export function ConversationProvider({ children }) {
         fetchTools();
     }, []);
 
+    // Fetch secrets from backend upon page load
+    useEffect(() => {
+        const fetchSecrets = async () => {
+            try {
+                const fetchedSecrets = await API.getSecrets();
+                setSecrets(fetchedSecrets);
+                if (!fetchedSecrets.find((secret) => secret.key === 'OPENAI_API_KEY')) {
+                    addToast('warning', 'No OPENAI_API_KEY secret provided. Please add in the left bottom corner under Settings menu.');
+                }
+            } catch (error) {
+                console.error('Error fetching secrets:', error);
+                setSecrets([]);
+            }
+        };
+        fetchSecrets();
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem('selectedModel', JSON.stringify(selectedModel));
+    }, [selectedModel]);
+
     useEffect(() => {
         const fetchMessages = async () => {
             try {
                 let fetchedConversation = await API.getConversation(selectedConversation);
                 console.log(fetchedConversation);
-                // if this is a new conversation, we add initial system message
-                // if (fetchedConversation.messages.length === 0) {
-                //     await API.createMessage(selectedConversation, 'system', SYSTEM_MESSAGE, new Date().toISOString());
-                //     fetchedConversation = await API.getConversation(selectedConversation);
-                //     // setSelectedConversationMessages([newMessage]);
-                // }
                 setSelectedConversationMessages(fetchedConversation.messages);
             } catch (error) {
                 console.error('Error fetching conversations:', error);
@@ -86,6 +110,36 @@ export function ConversationProvider({ children }) {
             setConversationLoading(false);
         }
     }, [selectedConversation]);
+
+    const addToast = (type, message) => {
+        console.log('add toast', type, message);
+        const newToast = { id: Date.now(), type, message };
+        setToasts((prevToasts) => [...prevToasts, newToast]);
+    };
+
+    const removeToast = (id) => {
+        setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
+    };
+
+    const handleAddNewSecret = async (key, value) => {
+        console.log('add new secret');
+        const newSecret = await API.createSecret(key, value);
+        console.log('newSecret', newSecret);
+        const newSecrets = await API.getSecrets();
+        setSecrets(newSecrets);
+    };
+
+    const handleDeleteSecret = async (secretId) => {
+        console.log('delete secret', secretId);
+        await API.deleteSecret(secretId);
+        setSecrets(secrets.filter((secret) => secret.id !== secretId));
+    };
+
+    const handleUpdateSecret = async (secretId, key, value) => {
+        console.log('update secret', secretId);
+        const updatedSecret = await API.updateSecret(secretId, key, value);
+        setSecrets(secrets.map((secret) => (secret.id === secretId ? updatedSecret : secret)));
+    };
 
     const toggleTool = async (toolId, toolEnabled) => {
         console.log('toggle tool', toolId, toolEnabled);
@@ -160,24 +214,19 @@ export function ConversationProvider({ children }) {
         let newAssistantMessage = await API.createMessage(selectedConversation, 'assistant', '\n', new Date().toISOString());
         setInStreamAssistantMessage(newAssistantMessage);
         const endpoint = `${API_URL}/conversations/${selectedConversation}/get_ai_completion`;
+        console.log('selectedModel', selectedModel.value);
         const streamHandler = new StreamHandler({
-            model: 'gpt-4', // 'gpt-3.5-turbo', 'gpt-4'
-            // model: 'gpt-3.5-turbo', // 'gpt-3.5-turbo', 'gpt-4'
+            model: selectedModel,
+            // model: 'gpt-4', // 'gpt-3.5-turbo', 'gpt-4'
             endpoint,
             assistant_message_id: newAssistantMessage.id,
             onMessage: (text, streamText) => {
-                // console.log('onMessage:', { text, streamText });
-                // if text matches /\[\[(.*?)\]\]/ an action was sent from the backend
                 const regex = /\[\[(.*?)\]\]/;
                 const match = text.match(regex);
                 if (match) {
                     const action = match[1];
-                    // console.log('action', action);
-                    // console.log('inStreamAssistantAction', inStreamAssistantAction);
                     setInStreamAssistantAction(action);
                 } else {
-                    // console.log('streamText', streamText);
-                    // console.log('inStreamAssistantAction', inStreamAssistantAction);
                     setInStreamAssistantAction((prev) => {
                         if (prev) {
                             // console.log('setInStreamAssistantAction UNSETTING');
@@ -194,8 +243,13 @@ export function ConversationProvider({ children }) {
                 setInStreamAssistantMessage(null);
                 setSelectedConversationMessages(newConversation.messages);
             },
-            onError: (err) => {
-                console.error('Stream error:', err);
+            onError: (event) => {
+                console.log('event.data', event.data);
+                if (event.data && event.data.includes('OpenAI API key provided')) {
+                    addToast('warning', 'No OPENAI_API_KEY secret provided. Please add in the left bottom corner under Settings menu.');
+                    // setInStreamAssistantMessage(null);
+                }
+                console.error('Stream error:', event);
             },
         });
         streamHandler.start();
@@ -250,6 +304,9 @@ export function ConversationProvider({ children }) {
             console.log('Refreshing the toolset...');
             const fetchedTools = await API.getTools();
             setTools(fetchedTools);
+            // refresh the secrets
+            const fetchedSecrets = await API.getSecrets();
+            setSecrets(fetchedSecrets);
             return response;
         } catch (error) {
             console.error('File upload error:', error);
@@ -258,8 +315,12 @@ export function ConversationProvider({ children }) {
     };
 
     const value = {
+        MODELS,
+        selectedModel,
+        setSelectedModel,
         conversations,
         tools,
+        secrets,
         toggleTool,
         handleDeleteTool,
         setConversations,
@@ -283,7 +344,13 @@ export function ConversationProvider({ children }) {
         handleRegenerateMessage,
         handleUpsertConversationEmbeddings,
         handleDeleteConversationEmbeddings,
+        handleAddNewSecret,
+        handleDeleteSecret,
+        handleUpdateSecret,
         isLastAssistantMessage,
+        toasts,
+        addToast,
+        removeToast,
     };
 
     return <ConversationsContext.Provider value={value}>{children}</ConversationsContext.Provider>;

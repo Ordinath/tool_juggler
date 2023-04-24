@@ -9,6 +9,7 @@ from routes import register_routes
 from vectorstores import register_vectorstores
 from utils import add_core_tool
 from core_tools import long_term_memory_tool
+import crypto_utils
 
 load_dotenv()
 
@@ -16,6 +17,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///conversations.db'
 db.init_app(app)
 CORS(app)
+
 
 if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
     register_vectorstores(app)

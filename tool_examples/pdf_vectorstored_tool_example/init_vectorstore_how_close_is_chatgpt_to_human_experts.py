@@ -2,6 +2,8 @@ import os
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
+# get_secret_value is the function to be used within all tool components to get secrets
+from utils import get_secret_value
 
 
 def init_vectorstore_how_close_is_chatgpt_to_human_experts():
@@ -16,7 +18,7 @@ def init_vectorstore_how_close_is_chatgpt_to_human_experts():
     ))
     client.persist()
     embedding_function = embedding_functions.OpenAIEmbeddingFunction(
-        model_name="text-embedding-ada-002", api_key=os.environ["OPENAI_API_KEY"])
+        model_name="text-embedding-ada-002", api_key=get_secret_value("OPENAI_API_KEY"))
     collection = client.get_or_create_collection(
         name="how_close_is_chatgpt_to_human_experts", embedding_function=embedding_function)
 

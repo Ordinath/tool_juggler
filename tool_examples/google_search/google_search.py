@@ -1,13 +1,12 @@
 from langchain.utilities import GoogleSearchAPIWrapper
 from langchain.agents import Tool
-from dotenv import load_dotenv
+# get_secret_value is the function to be used within all tool components to get secrets
+from utils import get_secret_value
 import os
 
-load_dotenv()
-
 search_tool = GoogleSearchAPIWrapper(
-    google_api_key=os.environ["GOOGLE_API_KEY"],
-    google_cse_id=os.environ["GOOGLE_CSE_ID"]
+    google_api_key=get_secret_value("GOOGLE_API_KEY"),
+    google_cse_id=get_secret_value("GOOGLE_CSE_ID")
 )
 
 
