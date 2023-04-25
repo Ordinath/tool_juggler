@@ -8,7 +8,7 @@ export default function ConversationList() {
     const { conversations, handleAddNewConversation } = useConversations();
 
     return (
-        <Box display="flex" flexDirection="column" gap=".5rem" width="100%" sx={{ overflowY: 'scroll', flexGrow: 1 }}>
+        <Box display="flex" flexDirection="column" gap=".5rem" width="100%" sx={{ overflowY: 'auto', overflowX: 'hidden', flexGrow: 1 }}>
             <Box width="100%" sx={{ paddingRight: '2rem' }}>
                 <Button variant="outlined" fullWidth onClick={handleAddNewConversation}>
                     New conversation

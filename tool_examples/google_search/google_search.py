@@ -2,7 +2,6 @@ from langchain.utilities import GoogleSearchAPIWrapper
 from langchain.agents import Tool
 # get_secret_value is the function to be used within all tool components to get secrets
 from utils import get_secret_value
-import os
 
 search_tool = GoogleSearchAPIWrapper(
     google_api_key=get_secret_value("GOOGLE_API_KEY"),

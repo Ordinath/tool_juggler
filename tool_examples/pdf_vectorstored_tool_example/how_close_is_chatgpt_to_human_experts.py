@@ -14,10 +14,10 @@ def how_close_is_chatgpt_to_human_experts_tool(app, query):
         return "There is no memory"
 
     #  if there are less then 5 embeddings in the collection, n_results should be the number of embeddings in the collection otherwise n_results should be 5
-    if number_of_embeddings < 5:
+    if number_of_embeddings < 3:
         n_results = number_of_embeddings
     else:
-        n_results = 5
+        n_results = 3
 
     results = collection.query(query_texts=[query], n_results=n_results)
 
