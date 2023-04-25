@@ -5,7 +5,7 @@ from chromadb.utils import embedding_functions
 from utils import get_secret_value
 
 
-def init_vectorstore_${pdf_snake_case_name}():
+def init_vectorstore_${pdf_snake_case_name}(app):
     current_file_path = os.path.dirname(os.path.abspath(__file__))
     persist_directory = os.path.join(
         current_file_path, '..', 'vectorstores', '${pdf_snake_case_name}')
