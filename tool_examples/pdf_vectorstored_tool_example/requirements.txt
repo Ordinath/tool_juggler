@@ -1,3 +1,1 @@
-langchain==0.0.141
-chromadb==0.3.21
 pypdf==3.8.0

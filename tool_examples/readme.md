@@ -33,7 +33,7 @@ The `manifest.json` file is a key component of the tool uploading process, as it
 - `version`: A simple version representation for the tool. This value is used for reference purposes only and does not affect tool processing logic.
 - `requirements`: A text file listing any Python packages required to run the prep script or vector store init script. These dependencies will be installed via pip in the application backend's virtual environment.
 - `vectorstore_init`: A script that initializes a vector store if required by the tool. If the tool relies on a vector store during execution, this script must be provided and properly formatted. Check the `pdf_vectorstored_tool_example` for an example of this script.
-- `prep_script`: A script that runs after installing the requirements but before initializing the vector store. This script might load a PDF or CSV file, for example, and create a vector store. The `pdf_vectorstored_tool_example` also contains an example of a prep script.
+- `prep_script`: A script that runs after installing the requirements but before initializing the vector store. This script might load a PDF or CSV file, for example, and create a vector store. The `pdf_vectorstored_tool_example` also contains an example of a prep script. The main entry point of such script must follow the naming convention of `prepare_{name of the tool}`.
 - `env_vars`: An array of environment variables required by the tool. Currently, you need to manually add these variables to the `.env` file on the backend if they are not already present. In the future, this process will be automated, and a menu will be provided in the frontend to handle these variables.
 
 ## Tool Definition Script Example

@@ -92,7 +92,7 @@ export async function deleteTool(toolId: string): Promise<void> {
 // Get all secrets
 export async function getSecrets(): Promise<Secret[]> {
     const response: AxiosResponse<Secret[]> = await axios.get(`${API_URL}/secrets`);
-    console.log('get Secrets response.data', response.data);
+    // console.log('get Secrets response.data', response.data);
     return response.data;
 }
 

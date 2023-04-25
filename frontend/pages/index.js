@@ -49,7 +49,7 @@ export default function Home() {
                                 sx={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
                                 // sx={{ overflowY: 'scroll', backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
                             >
-                                <ConversationList {...{}} />
+                                <ConversationList />
                                 <Settings />
                             </Box>
                             <Box
@@ -64,8 +64,8 @@ export default function Home() {
                                     marginY: '2rem',
                                 }}
                             >
-                                <SelectedConversation {...{}} />
-                                <UserInput {...{}} />
+                                <SelectedConversation />
+                                <UserInput />
                             </Box>
                             <Box
                                 display="flex"
