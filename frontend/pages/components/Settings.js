@@ -17,7 +17,7 @@ export default function Settings() {
             flexDirection="column"
             // gap="0.5rem"
             width="100%"
-            sx={{ fontSize: '0.8rem', alignSelf: 'flex-end', width: '100%' }}
+            sx={{ fontSize: '0.8rem', alignSelf: 'flex-end', width: '100%', }}
         >
             <Button
                 // variant='text'
@@ -53,7 +53,7 @@ export default function Settings() {
             <Collapse in={!collapsed}>
                 <Box
                     sx={{
-                        overflowY: 'scroll',
+                        overflowY: 'auto',
                     }}
                 >
                     <ModelSetting />

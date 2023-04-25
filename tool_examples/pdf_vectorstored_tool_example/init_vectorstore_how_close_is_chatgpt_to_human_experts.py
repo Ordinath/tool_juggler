@@ -6,7 +6,7 @@ from chromadb.utils import embedding_functions
 from utils import get_secret_value
 
 
-def init_vectorstore_how_close_is_chatgpt_to_human_experts():
+def init_vectorstore_how_close_is_chatgpt_to_human_experts(app):
     current_file_path = os.path.dirname(os.path.abspath(__file__))
     persist_directory = os.path.join(
         current_file_path, '..', 'vectorstores', 'how_close_is_chatgpt_to_human_experts')

@@ -4,7 +4,7 @@ from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 
 
-def init_vectorstore_long_term_memory():
+def init_vectorstore_long_term_memory(app):
     current_file_path = os.path.dirname(os.path.abspath(__file__))
     persist_directory = os.path.join(
         current_file_path, '..', 'vectorstores', 'long_term_memory')

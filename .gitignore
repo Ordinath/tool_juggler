@@ -37,4 +37,5 @@ venv/
 **/resources/private/*
 **/tool_examples/private/*
 **/vectorstores/*
+**/tool_packages/*
 __pycache__/

@@ -11,6 +11,9 @@ from io import StringIO
 import re
 from db_models import Tool, db
 from utils import create_secret, get_secret_value
+import importlib
+import importlib.util
+import inspect
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
@@ -95,37 +98,18 @@ def process_tool_zip(app, file_path):
                 subprocess.run([str(BASE_DIR / 'venv' / 'bin' / 'pip'), 'install',
                                 '-r', str(requirements_file)])
 
+            # Add environment variables to .env file
+            if manifest_data.get('env_vars'):
+                add_env_vars_to_database(
+                    manifest_data['env_vars'], tool_rest_folder / '.env')
+
             if manifest_data.get('prep_script'):
                 prep_script_file = tool_rest_folder / \
                     manifest_data.get('prep_script', '')
 
-                # Check if the prep script is a Jupyter notebook
-                if prep_script_file.suffix == '.ipynb':
-                    # Convert the Jupyter notebook to a Python script
-                    converted_script_file = prep_script_file.with_suffix('.py')
-
-                    output_buffer = StringIO()
-                    nbconvert.export(nbconvert.PythonExporter, str(
-                        prep_script_file), output=output_buffer)
-
-                    # Write the output buffer content to the converted_script_file
-                    with open(converted_script_file, 'w', encoding='utf-8') as converted_script:
-                        converted_script.write(output_buffer.getvalue())
-
-                    # Execute the converted Python script
-                    subprocess.run(
-                        [str(BASE_DIR / 'venv' / 'bin' / 'python'), str(converted_script_file)])
-                elif prep_script_file.suffix == '.py':
+                if prep_script_file.suffix == '.py':
                     # Execute the Python script directly
-                    subprocess.run(
-                        [str(BASE_DIR / 'venv' / 'bin' / 'python'), str(prep_script_file)])
-
-            # Add environment variables to .env file
-            if manifest_data.get('env_vars'):
-                # add_env_vars_to_file(
-                #     manifest_data['env_vars'], BASE_DIR / '.env')
-                add_env_vars_to_database(
-                    manifest_data['env_vars'], tool_rest_folder / '.env')
+                    exec_prep_script(app, prep_script_file)
 
             # Add the new vectorstore to the Flask application context
             if vectorstore_file:
@@ -234,3 +218,28 @@ def remove_tool_files(tool):
     rest_folder = Path(BASE_DIR, 'resources', tool_type, 'rest', tool_name)
     if rest_folder.exists():
         shutil.rmtree(rest_folder)
+
+
+def exec_prep_script(app, prep_script_path):
+    print(f"Executing prep script: {prep_script_path}")
+
+    # Import the prep script module
+    module_name = os.path.splitext(os.path.basename(prep_script_path))[0]
+    print(f"Attempting to import module: {module_name}")
+
+    spec = importlib.util.spec_from_file_location(
+        module_name, prep_script_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    # Find and execute functions starting with 'prepare_'
+    prepare_functions = [func for name, func in inspect.getmembers(
+        module, inspect.isfunction) if name.startswith('prepare_')]
+
+    if prepare_functions:
+        for prepare_func in prepare_functions:
+            print(f"Executing function: {prepare_func.__name__}")
+            prepare_func(app)
+    else:
+        print(
+            f"No function starting with 'prepare_' found in {prep_script_path}")
