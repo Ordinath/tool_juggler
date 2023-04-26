@@ -40,9 +40,9 @@ const ZipFileDropzone = ({ onDrop }) => {
             {isLoading ? (
                 <CircularProgress />
             ) : isDragActive ? (
-                <p>Drop the tool zip file here ...</p>
+                <p>Drop the 📦 here...</p>
             ) : (
-                <p>Drag and drop a tool zip file here, or click to select a file</p>
+                <p>Upload a tool <b style={{color: 'red'}}>ZIP</b> file or a <b style={{color: 'red'}}>PDF</b> doc here.</p>
             )}
         </div>
     );
