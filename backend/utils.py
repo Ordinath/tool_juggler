@@ -4,6 +4,7 @@ import sys
 from db_models import Conversation, Message, Tool, Embedding, Secret, db
 from crypto_utils import encrypt, decrypt
 from flask import current_app
+import re
 
 
 def create_secret(key, value):
@@ -100,8 +101,17 @@ def upsert_embeddings(app, conversation_id, vectorstore, embedding_strings):
     return new_embeddings
 
 
+def normalize_string(str):
+    # Replace underscores with spaces
+    str = str.replace('_', ' ')
+
+    # Remove special characters except spaces, capitalize words
+    str = re.sub(r'[^a-zA-Z0-9 ]', '', str).title()
+
+    return str
+
+
 def to_snake_case(name):
-    import re
     name = name.strip().lower()
     name = re.sub(r'\W+', ' ', name)  # Remove any special characters
     name = name.replace(' ', '_')
@@ -133,3 +143,9 @@ def add_core_tool(app, tool_info):
 
             db.session.add(core_tool)
             db.session.commit()
+
+def cut_string(string, max_len):
+    if len(string) > max_len:
+        return string[:max_len]
+    else:
+        return string

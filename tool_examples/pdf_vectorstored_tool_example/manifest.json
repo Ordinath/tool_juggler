@@ -2,10 +2,10 @@
     "name": "How close is ChatGPT to Human Experts",
     "version": "0.1",
     "tool_type": "private",
-    "tool_definition": "how_close_is_chatgpt_to_human_experts.py",
+    "tool_definition": "how_close_is_chatgpt_to_human_experts_tool.py",
     "vectorstore_init": "init_vectorstore_how_close_is_chatgpt_to_human_experts.py",
     "requirements": "requirements.txt",
-    "prep_script": "prepare_pdf_vectorstore.py",
+    "prep_script": "prepare_how_close_is_chatgpt_to_human_experts.py",
     "env_vars": [
         "OPENAI_API_KEY"
     ]

@@ -4,16 +4,13 @@ from langchain.agents import Tool
 def how_close_is_chatgpt_to_human_experts_tool(app, query):
 
     collection = app.vectorstores["how_close_is_chatgpt_to_human_experts"]["collection"]
-    # print(collection.peek())
     print('how_close_is_chatgpt_to_human_experts collection contains ',
           collection.count())
 
     number_of_embeddings = collection.count()
-    # if there are no embeddings in the collection (if collection.count() returns 0), return "There is no memory"
     if number_of_embeddings == 0:
         return "There is no memory"
 
-    #  if there are less then 5 embeddings in the collection, n_results should be the number of embeddings in the collection otherwise n_results should be 5
     if number_of_embeddings < 3:
         n_results = number_of_embeddings
     else:

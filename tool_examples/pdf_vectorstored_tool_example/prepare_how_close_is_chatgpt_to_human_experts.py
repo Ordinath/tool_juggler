@@ -1,11 +1,10 @@
+from langchain.document_loaders import PyPDFLoader
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
+import os
 # get_secret_value is the function to be used within all tool components to get secrets
 from utils import get_secret_value
-import os
-
-from langchain.document_loaders import PyPDFLoader
 
 
 def prepare_how_close_is_chatgpt_to_human_experts(app):
