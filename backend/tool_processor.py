@@ -15,6 +15,7 @@ from string import Template
 import importlib
 import importlib.util
 import inspect
+from datetime import datetime
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
@@ -91,11 +92,16 @@ class ToolProcessor:
     def _move_files_to_destination_folders(self, zip_ref):
         self.destination_folder = BASE_DIR / 'resources' / self.tool_type / 'tools'
         self.destination_folder.mkdir(parents=True, exist_ok=True)
-        shutil.move(
+        # shutil.move(
+        #     self.temp_folder / self.parent_folder /
+        #     self.manifest_data['tool_definition'],
+        #     self.destination_folder,
+        #     copy_function=shutil.copy2
+        # )
+        shutil.copy2(
             self.temp_folder / self.parent_folder /
             self.manifest_data['tool_definition'],
-            self.destination_folder,
-            copy_function=shutil.copy2
+            self.destination_folder / self.manifest_data['tool_definition']
         )
 
         if self.manifest_data.get('vectorstore_init'):
@@ -109,11 +115,16 @@ class ToolProcessor:
         vectorstore_folder.mkdir(parents=True, exist_ok=True)
         self.vectorstore_file = vectorstore_folder / \
             f'init_vectorstore_{self.snake_case_name}.py'
-        shutil.move(
+        # shutil.move(
+        #     self.temp_folder / self.parent_folder /
+        #     self.manifest_data['vectorstore_init'],
+        #     self.vectorstore_file,
+        #     copy_function=shutil.copy2
+        # )
+        shutil.copy2(
             self.temp_folder / self.parent_folder /
             self.manifest_data['vectorstore_init'],
-            self.vectorstore_file,
-            copy_function=shutil.copy2
+            self.vectorstore_file
         )
 
     def _move_rest_files(self):
@@ -125,8 +136,9 @@ class ToolProcessor:
 
         for item in (self.temp_folder / self.parent_folder).iterdir():
             if item.is_file():
-                shutil.move(item, self.tool_rest_folder /
-                            item.name, copy_function=shutil.copy2)
+                # shutil.move(item, self.tool_rest_folder /
+                #             item.name, copy_function=shutil.copy2)
+                shutil.copy2(item, self.tool_rest_folder / item.name)
 
     def _install_requirements_and_execute_prep_script(self):
         requirements_file = self.tool_rest_folder / \
@@ -155,7 +167,7 @@ class ToolProcessor:
             self.destination_folder / self.manifest_data['tool_definition']).read_text()
         tool_description = extract_tool_description(tool_definition_content)
 
-        add_tool_to_database(
+        upsert_tool_to_database(
             name=self.manifest_data['name'],
             enabled=True,
             core=False,
@@ -435,17 +447,29 @@ def extract_tool_description(script_content):
     return None
 
 
-def add_tool_to_database(name, enabled, core, tool_type, manifest, description, tool_definition_path):
-    tool = Tool(
-        name=name,
-        enabled=enabled,
-        core=core,
-        tool_type=tool_type,
-        tool_definition_path=tool_definition_path,
-        manifest=manifest,
-        description=description
-    )
-    db.session.add(tool)
+def upsert_tool_to_database(name, enabled, core, tool_type, manifest, description, tool_definition_path):
+    tool = Tool.query.filter_by(name=name).first()
+
+    if tool:
+        tool.enabled = enabled
+        tool.core = core
+        tool.tool_type = tool_type
+        tool.tool_definition_path = tool_definition_path
+        tool.manifest = manifest
+        tool.description = description
+        tool.updated_at = datetime.utcnow()
+    else:
+        tool = Tool(
+            name=name,
+            enabled=enabled,
+            core=core,
+            tool_type=tool_type,
+            tool_definition_path=tool_definition_path,
+            manifest=manifest,
+            description=description
+        )
+        db.session.add(tool)
+
     db.session.commit()
 
 
