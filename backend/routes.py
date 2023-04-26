@@ -10,7 +10,7 @@ from chromadb.utils import embedding_functions
 from db_models import Conversation, Message, Embedding, Tool, Secret, db
 from utils import register_tools, upsert_embeddings
 from tool_juggler import tool_juggler_agent
-from process_tool import process_tool_zip, remove_tool_files, create_pdf_tool_zip
+from tool_processor import ToolProcessor, remove_tool_files
 import os
 from werkzeug.utils import secure_filename
 from functools import wraps
@@ -224,10 +224,9 @@ def register_routes(app):
             os.makedirs(dir_path, exist_ok=True)
             file.save(file_path)
 
-            if (file_extension == "pdf"):
-                file_path = create_pdf_tool_zip(file_path)
+            tool_processor = ToolProcessor(app, file_path)
+            processing_result = tool_processor.process_file()
 
-            processing_result = process_tool_zip(app, file_path)
             return jsonify({'message': processing_result}), 200 if processing_result == "Tool processed successfully" else 400
 
     @app.route('/tools', methods=['GET'])

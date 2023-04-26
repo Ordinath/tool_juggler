@@ -3,10 +3,6 @@ import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 import os
-import sys
-# add the utils directory to the path
-utils_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
-sys.path.insert(0, utils_directory)
 # get_secret_value is the function to be used within all tool components to get secrets
 from utils import get_secret_value
 

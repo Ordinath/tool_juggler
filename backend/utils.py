@@ -143,3 +143,9 @@ def add_core_tool(app, tool_info):
 
             db.session.add(core_tool)
             db.session.commit()
+
+def cut_string(string, max_len):
+    if len(string) > max_len:
+        return string[:max_len]
+    else:
+        return string

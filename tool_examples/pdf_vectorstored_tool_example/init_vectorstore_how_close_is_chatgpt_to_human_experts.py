@@ -13,7 +13,6 @@ def init_vectorstore_how_close_is_chatgpt_to_human_experts(app):
 
     client = chromadb.Client(Settings(
         chroma_db_impl="duckdb+parquet",
-        # Optional, defaults to .chromadb/ in the current directory
         persist_directory=persist_directory
     ))
     client.persist()

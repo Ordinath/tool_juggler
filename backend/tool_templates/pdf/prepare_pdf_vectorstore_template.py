@@ -20,23 +20,26 @@ def prepare_${pdf_snake_case_name}(app):
         model_name="text-embedding-ada-002", api_key=get_secret_value("OPENAI_API_KEY"))
 
     collection = client.get_or_create_collection(
-        name="${pdf_snake_case_name}", embedding_function=embedding_function)
+        name="${pdf_snake_case_name_max_63_char}", embedding_function=embedding_function)
 
-    # Calculate the absolute path of the PDF file
-    pdf_path = os.path.join(
-        current_file_path, "${pdf_file_name}.pdf")
-    loader = PyPDFLoader(pdf_path)
-    pages = loader.load_and_split()
-    print(pages[0])
 
-    # create an array of page_contents from the pages
-    documents = [page.page_content for page in pages]
-    ids = [str(i) for i in range(1, len(pages) + 1)]
+    # only add the documents if the collection is empty
+    if collection.count() < 1:
+        # Calculate the absolute path of the PDF file
+        pdf_path = os.path.join(
+            current_file_path, "${pdf_file_name}.pdf")
+        loader = PyPDFLoader(pdf_path)
+        pages = loader.load_and_split()
+        print(pages[0])
 
-    # add the documents to the collection
-    collection.add(
-        documents=documents,
-        ids=ids
-    )
+        # create an array of page_contents from the pages
+        documents = [page.page_content for page in pages]
+        ids = [str(i) for i in range(1, len(pages) + 1)]
 
-    client.persist()
+        # add the documents to the collection
+        collection.add(
+            documents=documents,
+            ids=ids
+        )
+
+        client.persist()
