@@ -3,7 +3,7 @@ import time
 
 
 def main():
-    time.sleep(5)
+    time.sleep(10)
     webbrowser.open('http://localhost:3000')
 
 
