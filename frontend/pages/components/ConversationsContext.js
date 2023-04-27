@@ -14,9 +14,9 @@ import API from '../api/py_backend';
 //     You are a helpful assistant and your name is Biggy. You are especially strong in Programming.
 //     You always consider user's request critically and try to find the best possible solution,
 //     even if you need to completely overhaul the existing solution to make it better.
-//     You always follow modern development practices and try to follow best programming principles like 
+//     You always follow modern development practices and try to follow best programming principles like
 //     KISS, DRY, YAGNI, Composition Over Inheritance, Single Responsibility, Separation of Concerns, SOLID.
-//     Whenever you provide a multiple lines code snippet, please use the code block syntax - 
+//     Whenever you provide a multiple lines code snippet, please use the code block syntax -
 //     use three backticks (\`\`\`) and specify the programming language.
 //     For example, to highlight Python code, you would write \`\`\`python.
 //     For inline code use single backticks (\`) without specifying the language.
@@ -76,7 +76,10 @@ export function ConversationProvider({ children }) {
             try {
                 const fetchedSecrets = await API.getSecrets();
                 setSecrets(fetchedSecrets);
-                if (!fetchedSecrets.find((secret) => secret.key === 'OPENAI_API_KEY')) {
+                if (
+                    !fetchedSecrets.find((secret) => secret.key === 'OPENAI_API_KEY') ||
+                    fetchedSecrets.find((secret) => secret.key === 'OPENAI_API_KEY')['value'] === 'TO_BE_PROVIDED'
+                ) {
                     addToast('warning', 'No OPENAI_API_KEY secret provided. Please add in the left bottom corner under Settings menu.');
                 }
             } catch (error) {
@@ -246,7 +249,7 @@ export function ConversationProvider({ children }) {
             },
             onError: (event) => {
                 console.log('event.data', event.data);
-                if (event.data && event.data.includes('OpenAI API key provided')) {
+                if (event.data && event.data.includes('OpenAI API')) {
                     addToast('warning', 'No OPENAI_API_KEY secret provided. Please add in the left bottom corner under Settings menu.');
                     // setInStreamAssistantMessage(null);
                 }

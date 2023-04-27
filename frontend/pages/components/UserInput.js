@@ -67,7 +67,7 @@ export default function UserInput() {
                 stream.getTracks().forEach((track) => track.stop());
             } else {
                 insertTextResult(
-                    `${response.status} ERROR! API key not provided or OpenAI Server Error! Check the Pop-up window of the Extension to provide API key.`
+                    `${response.status} ERROR! API key not provided or OpenAI Server Error! Check the Settings to provide API key.`
                 );
                 // this.recording = false;
                 stream.getTracks().forEach((track) => track.stop());
