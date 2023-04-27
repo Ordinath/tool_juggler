@@ -34,7 +34,7 @@ class ToolProcessor:
         self.vectorstore_file = None
 
     def process_file(self):
-        # file_extension = self.file_path.rsplit('.', 1)[1].lower()
+        print(f"Processing file: {self.file_path}")
         file_extension = str(self.file_path).rsplit('.', 1)[1].lower()
 
         if file_extension == 'pdf':
@@ -59,6 +59,7 @@ class ToolProcessor:
                 return f"Error while processing tool: {e}"
 
     def _find_and_process_manifest(self, zip_ref):
+        print("Processing manifest")
         manifest_path = self._find_manifest(zip_ref)
         if manifest_path is None:
             raise Exception("Manifest file not found")
@@ -86,10 +87,12 @@ class ToolProcessor:
         self._add_tool_to_database()
 
     def _extract_tool_to_temp_folder(self, zip_ref):
+        print("Extracting tool to temp folder")
         self.temp_folder.mkdir(parents=True, exist_ok=True)
         zip_ref.extractall(self.temp_folder)
 
     def _move_files_to_destination_folders(self, zip_ref):
+        print("Moving files to destination folders")
         self.destination_folder = BASE_DIR / 'resources' / self.tool_type / 'tools'
         self.destination_folder.mkdir(parents=True, exist_ok=True)
         # shutil.move(
@@ -141,6 +144,7 @@ class ToolProcessor:
                 shutil.copy2(item, self.tool_rest_folder / item.name)
 
     def _install_requirements_and_execute_prep_script(self):
+        print(f"Installing requirements: {self.manifest_data.get('requirements')}")
         requirements_file = self.tool_rest_folder / \
             self.manifest_data.get('requirements', '')
         if self.manifest_data.get('requirements') and requirements_file.is_file():
@@ -154,15 +158,18 @@ class ToolProcessor:
                 self._exec_prep_script(self.app, prep_script_file)
 
     def _add_env_vars_to_database(self):
+        print(f"Adding env vars to database: {self.manifest_data.get('env_vars')}")
         if self.manifest_data.get('env_vars'):
             add_env_vars_to_database(
                 self.manifest_data['env_vars'], self.tool_rest_folder / '.env')
 
     def _add_vectorstore_to_app(self):
+        print(f"Adding vectorstore to app: {self.vectorstore_file}")
         if self.vectorstore_file:
             add_vectorstore_to_app(self.app, self.vectorstore_file)
 
     def _add_tool_to_database(self):
+        print(f"Adding tool to database: {self.manifest_data['name']}")
         tool_definition_content = (
             self.destination_folder / self.manifest_data['tool_definition']).read_text()
         tool_description = extract_tool_description(tool_definition_content)

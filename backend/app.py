@@ -21,9 +21,9 @@ with app.app_context():
 CORS(app)
 
 
-if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-    register_vectorstores(app)
-    print(app.vectorstores)
+# if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+register_vectorstores(app)
+print(app.vectorstores)
 
 
 add_core_tool(app, long_term_memory_tool)
@@ -34,4 +34,4 @@ register_routes(app)
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True, port=5005, use_reloader=False)
+    app.run(debug=False, port=5005, use_reloader=False)
