@@ -1,5 +1,6 @@
 import Head from 'next/head';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { styled, alpha } from '@mui/material/styles';
 import { ConversationProvider } from './components/ConversationsContext';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -17,6 +18,25 @@ import Settings from './components/Settings';
 import { useHasMounted } from './hooks/useHasMounted';
 
 const darkTheme = createTheme(themeOptions);
+
+const SidebarBox = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    width: '20rem',
+    minWidth: '20rem',
+    gap: '.5rem',
+    padding: '.5rem',
+    height: '100%',
+    overflowY: 'auto',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+}));
+
+const LeftSidebarBox = styled(SidebarBox)(({ theme }) => ({
+    borderRight: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+}));
+const RightSidebarBox = styled(SidebarBox)(({ theme }) => ({
+    borderLeft: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+}));
 
 export default function Home() {
     const hasMounted = useHasMounted();
@@ -36,22 +56,10 @@ export default function Home() {
                         <Toast />
                         <CssBaseline />
                         <Box display="flex" width="100%" height="100vh">
-                            <Box
-                                display="flex"
-                                flexDirection="column"
-                                // flexWrap="wrap"
-                                className="sidebar"
-                                width="20rem"
-                                minWidth="20rem"
-                                gap=".5rem"
-                                padding=".5rem"
-                                // height="100%"
-                                sx={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
-                                // sx={{ overflowY: 'scroll', backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
-                            >
+                            <LeftSidebarBox>
                                 <ConversationList />
                                 <Settings />
-                            </Box>
+                            </LeftSidebarBox>
                             <Box
                                 display="flex"
                                 flexDirection="column"
@@ -67,20 +75,9 @@ export default function Home() {
                                 <SelectedConversation />
                                 <UserInput />
                             </Box>
-                            <Box
-                                display="flex"
-                                flexDirection="column"
-                                flexWrap="wrap"
-                                className="sidebar"
-                                width="20rem"
-                                minWidth="20rem"
-                                gap=".5rem"
-                                padding=".5rem"
-                                height="100%"
-                                sx={{ overflowY: 'auto', backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
-                            >
+                            <RightSidebarBox>
                                 <ToolList />
-                            </Box>
+                            </RightSidebarBox>
                         </Box>
                     </ThemeProvider>
                 </main>
