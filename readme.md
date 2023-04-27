@@ -30,7 +30,7 @@ source ~/.bash_profile
 
 Download and install the Python 3.10 executable installer from the official Python website:
 
-[https://www.python.org/downloads/release/python-3100/](https://www.python.org/downloads/release/python-3100/)
+[https://www.python.org/downloads/release/python-31010/](https://www.python.org/downloads/release/python-31010/)
 
 During the installation process, make sure to check the box "Add Python 3.10 to PATH" before proceeding.
 
