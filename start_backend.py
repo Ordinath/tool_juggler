@@ -7,9 +7,9 @@ def main():
     command = ''
 
     if os_platform == 'Windows':
-        command = 'cd backend && venv\\Scripts\\activate && python app.py'
+        command = 'cd backend && venv\\Scripts\\activate && python3.10 app.py'
     elif os_platform == 'Linux' or os_platform == 'Darwin':
-        command = 'cd backend && source venv/bin/activate && python app.py'
+        command = 'cd backend && source venv/bin/activate && python3.10 app.py'
     else:
         print(f"Unsupported platform: {os_platform}")
         exit(1)

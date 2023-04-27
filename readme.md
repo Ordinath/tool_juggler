@@ -1,10 +1,43 @@
-## alpha version - raw and unpolished
+# alpha version - raw and unpolished
 
-#### https://discord.gg/qzTwvKkc
+### https://discord.gg/qzTwvKkc
 
-### Installation and Prerequisites
+## Prerequisites, Installation and Running
 
-You can use the automated installation and running process to set up the project. In case this doesn't work for any reason, you can follow the steps provided below for manual installation and running.
+### Prerequisites
+
+Python 3.10 is required to successfully install and run the application in an automated manner. The application was tested on Python 3.10.10. 
+Python 3.11 and 3.9 had issues with the langchain and chromadb libraries installations.
+
+#### Installing Python 3.10
+
+##### macOS and Linux
+
+You can install Python 3.10 using Homebrew:
+
+```bash
+brew install python@3.10
+```
+
+Make sure to add Python 3.10 to your PATH:
+
+```bash
+echo 'export PATH="/usr/local/opt/python@3.10/bin:$PATH"' >> ~/.bash_profile
+source ~/.bash_profile
+```
+
+##### Windows
+
+Download and install the Python 3.10 executable installer from the official Python website:
+
+[https://www.python.org/downloads/release/python-31010/](https://www.python.org/downloads/release/python-31010/)
+
+During the installation process, make sure to check the box "Add Python 3.10 to PATH" before proceeding.
+
+### Installation and Running
+
+You can use the automated installation and running process to set up the project. 
+In case this doesn't work for any reason, you can follow the steps provided below for manual installation and running.
 
 #### Automated Installation and Running
 
@@ -24,9 +57,9 @@ This will start both the backend and frontend and open your browser at [http://l
 
 Follow the steps provided below for manual installation and running if the automated process doesn't work as expected.
 
-##### Backend installation/setup and running
+##### Backend installation/setup
 
-This was tested and ran on Python 3.10.10. Both 3.11 and 3.09 had issues with the langchain and chroma libraries installations.
+This was tested and ran on Python **3.10.10**. Both 3.11 and 3.09 had issues with the langchain and chromadb libraries installations.
 
 ###### Install dependencies:
 
@@ -86,7 +119,7 @@ with
         ) -> Collection:
 ```
 
-##### Frontend installation/setup and running
+##### Frontend installation/setup
 
 ```cd frontend```
 
@@ -94,7 +127,7 @@ with
 
 #### Running the project manually
 
-###### Launch the backend:
+##### Launch the backend:
 
 ```cd backend```
 
@@ -109,7 +142,7 @@ venv\Scripts\activate
 
 This should launch the backend on [http://localhost:5005](http://localhost:5005)
 
-###### Launch the frontend:
+##### Launch the frontend:
 
 ```cd frontend```
 
