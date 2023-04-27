@@ -6,11 +6,13 @@ import os
 def main():
     os_platform = platform.system()
 
+    print("Installation started...")
+
     if os_platform == 'Windows':
-        install_script = 'install.bat'
+        install_script = './install.bat'
         os_env = 'windows'
     elif os_platform == 'Linux' or os_platform == 'Darwin':
-        install_script = 'install.sh'
+        install_script = './install.sh'
         os_env = 'mac-linux'
     else:
         print(f"Unsupported platform: {os_platform}")

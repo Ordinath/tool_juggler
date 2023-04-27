@@ -5,7 +5,7 @@
   "author": "Ordinath",
   "license": "MIT",
   "scripts": {
-    "install": "npm i && python3 install.py",
+    "install": "python3 install.py",
     "start": "concurrently \"npm run start-backend\" \"npm run start-frontend\" \"npm run open-browser\"",
     "start-backend": "python3 start_backend.py",
     "start-frontend": "cd frontend && npm run dev",
