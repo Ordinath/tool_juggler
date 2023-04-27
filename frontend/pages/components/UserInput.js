@@ -16,7 +16,7 @@ const WHISPER_PROMPT =
 const TRANSCRIPTION_URL = 'https://api.openai.com/v1/audio/transcriptions';
 
 export default function UserInput() {
-    const { handleSendMessage } = useConversations();
+    const { handleSendMessage, getOpenAiToken } = useConversations();
     const [userMessage, setUserMessage] = useState('');
     const inputRef = useRef(null);
 
@@ -39,7 +39,8 @@ export default function UserInput() {
             setRecordingStatus('processing');
             const audioBlob = new Blob(chunks, { type: 'audio/webm' });
             const file = audioBlob;
-            const token = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+            // const token = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+            const token = getOpenAiToken();
             const headers = new Headers({
                 Authorization: `Bearer ${token}`,
             });
