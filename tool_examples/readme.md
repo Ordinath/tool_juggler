@@ -1,10 +1,12 @@
 # Tool Juggler - Tool Uploading Documentation
 
-This document explains the process and requirements for uploading a new tool to the Tool Juggler platform. The folder provided contains two examples of tools that can be uploaded to the platform. To test the functionality, archive these folders into a zip file and either drag and drop them or use the upload menu within the Tool Juggler frontend UI.
+This document explains the process and requirements for uploading a new tool to the Tool Juggler platform. The folder contains examples of tools that can be uploaded to the platform. To test the functionality, archive these folders into a zip file and upload them using the Tool Juggler frontend drag-and-drop box.
 
 ## Manifest File Structure
 
 The `manifest.json` file is a key component of the tool uploading process, as it provides necessary information about the tool. The following is an example of a basic `manifest.json` template:
+
+**Note:** The `name`, `tool_type`, and `tool_definition` fields in the manifest file are always required. Make sure to provide these fields when creating a new tool.
 
 ```json
 {
@@ -34,7 +36,7 @@ The `manifest.json` file is a key component of the tool uploading process, as it
 - `requirements`: A text file listing any Python packages required to run the prep script or vector store init script. These dependencies will be installed via pip in the application backend's virtual environment.
 - `vectorstore_init`: A script that initializes a vector store if required by the tool. If the tool relies on a vector store during execution, this script must be provided and properly formatted. Check the `pdf_vectorstored_tool_example` for an example of this script.
 - `prep_script`: A script that runs after installing the requirements but before initializing the vector store. This script might load a PDF or CSV file, for example, and create a vector store. The `pdf_vectorstored_tool_example` also contains an example of a prep script. The main entry point of such script must follow the naming convention of `prepare_{name of the tool}`.
-- `env_vars`: An array of environment variables required by the tool. Currently, you need to manually add these variables to the `.env` file on the backend if they are not already present. In the future, this process will be automated, and a menu will be provided in the frontend to handle these variables.
+- `env_vars`: An array of environment variables required by the tool. if there is a .env file provided in the tool archive folder, the values in that file will be used to populate the environment variables, that are listed in the manifest. Otherwise, the variables provided in the tool masifest will be initiallized with `TO_BE_PROVIDED` value nad further will have to be provided in the frontend Settings menu.
 
 ## Tool Definition Script Example
 
@@ -54,6 +56,6 @@ def get_tool(app):
     ),
 ```
 
-For more examples, refer to the tool definition scripts provided in the example folders.
+If any of tool components should use ENV variables, the `get_secret_value` method from internal `utils` module should be used. For example see google search tool definition.
 
-**Note:** The `name`, `tool_type`, and `tool_definition` fields in the manifest file are always required. Make sure to provide these fields when creating a new tool.
+For more examples, refer to the tool definition scripts provided in the example folders.
