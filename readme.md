@@ -1,36 +1,40 @@
-## raw and dirty pre-alpha version - use at own risk
+## alpha version - raw and unpolished
 
-## https://discord.gg/qzTwvKkc
+#### https://discord.gg/qzTwvKkc
 
-### High-level goals from the top of the head:
+### Installation and Prerequisites
 
-#### Created as issues under new Tool Juggler Project
+You can use the automated installation and running process to set up the project. In case this doesn't work for any reason, you can follow the steps provided below for manual installation and running.
 
-## Installation and Prerequisites
+#### Automated Installation and Running
 
-### Backend installation/setup and running
+To use the automated installation script, run the following command:
 
-this was tested and ran on python 3.10.10, both 3.11 and 3.09 had issues with the langchain and chroma libraries installations.
+```npm install```
 
-prepare environment variables - create .env file in backend folder with the following content:
-```
-OPENAI_API_KEY={your openai api key}
-GOOGLE_API_KEY={your google custom search engine api key}
-GOOGLE_CSE_ID={your google custom search engine id}
-NS_CLIENT_KEY={for netsuite related stuff}
-NS_CLIENT_SECRET={for netsuite related stuff}
-NS_RESOURCE_OWNER_KEY={for netsuite related stuff}
-NS_RESOURCE_OWNER_SECRET={for netsuite related stuff}
-NS_REALM={for netsuite related stuff}
-```
+This will detect your operating system and execute the appropriate installation script (`install.sh` for Linux/macOS or `install.bat` for Windows).
 
-install dependencies:
+To start the application automatically, run the following command:
+
+```npm start```
+
+This will start both the backend and frontend and open your browser at [http://localhost:3000](http://localhost:3000).
+
+#### Manual Installation
+
+Follow the steps provided below for manual installation and running if the automated process doesn't work as expected.
+
+##### Backend installation/setup and running
+
+This was tested and ran on Python 3.10.10. Both 3.11 and 3.09 had issues with the langchain and chroma libraries installations.
+
+###### Install dependencies:
 
 ```cd backend```
 
-```python --version``` # should be 3.10.10
+```python3 --version``` # should be 3.10.10
 
-```python -m venv venv```
+```python3 -m venv venv```
 
 ```
 # Linux/macOS
@@ -39,15 +43,15 @@ source venv/bin/activate
 venv\Scripts\activate
 ```
 
-`pip install -r requirements.txt`
+```pip install -r requirements.txt```
 
-the fun parts:
+###### Fix issues in libraries:
 
-replace broken code in langchain library (to properly recognize chat model stream end):
+Replace broken code in langchain library (to properly recognize chat model stream end):
 
 ```cd venv/lib/python3.10/site-packages/langchain/chat_models```
 
-open base.py and replace the following code:
+Open `base.py` and replace the following code:
 
 ```
         return self._generate(messages, stop=stop).generations[0].message
@@ -61,11 +65,11 @@ with
         return output.generations[0].message
 ```
 
-replace broken code in chroma library (to intake optional embedding_function parameter):
+Replace broken code in chroma library (to intake optional embedding_function parameter):
 
 ```cd venv/lib/python3.10/site-packages/chromadb/api```
 
-open __init__.py and replace the following code on line 85:
+Open `__init__.py` and replace the following code on line 85:
 
 ```
     def get_or_create_collection(self, name: str, metadata: Optional[Dict] = None) -> Collection:
@@ -82,29 +86,33 @@ with
         ) -> Collection:
 ```
 
-to launch:
-
-```python app.py```
-
-This should launch backend on [http://localhost:5005](http://localhost:5005)
-
-### Frontend installation/setup and running
-
-frontend/.env.local file required with the following content:
-```
-NEXT_PUBLIC_OPENAI_API_KEY={your openai api key} # used from frontend to call openai api for voice recognition
-NEXT_PUBLIC_OPENAI_API_URL=https://api.openai.com/v1/chat/completions
-NEXT_PUBLIC_PY_BACKEND_API_URL=http://localhost:5005
-```
+##### Frontend installation/setup and running
 
 ```cd frontend```
 
 ```npm install```
 
+#### Running the project manually
+
+###### Launch the backend:
+
+```cd backend```
+
+```
+# Linux/macOS
+source venv/bin/activate
+# or Windows
+venv\Scripts\activate
+```
+
+```python3 app.py```
+
+This should launch the backend on [http://localhost:5005](http://localhost:5005)
+
+###### Launch the frontend:
+
+```cd frontend```
+
 ```npm run dev```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the chat page.
-
-
-
-#### path to prompts - langchain/agents/conversational_chat/prompt.py
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the Tool Juggler page.

@@ -1,21 +1,26 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { StreamHandler } from '../api/stream_handler';
 import { useClientSideState } from '../hooks/useClientSideState';
-const API_URL = process.env.NEXT_PUBLIC_PY_BACKEND_API_URL;
+import { API_URL } from '../constants';
+
+const MODELS = [
+    { name: 'GPT-4 (recommended)', value: 'gpt-4' },
+    { name: 'GPT-3.5-TURBO', value: 'gpt-3.5-turbo' },
+];
 
 import API from '../api/py_backend';
 
-const SYSTEM_MESSAGE = `
-    You are a helpful assistant and your name is Biggy. You are especially strong in Programming.
-    You always consider user's request critically and try to find the best possible solution,
-    even if you need to completely overhaul the existing solution to make it better.
-    You always follow modern development practices and try to follow best programming principles like 
-    KISS, DRY, YAGNI, Composition Over Inheritance, Single Responsibility, Separation of Concerns, SOLID.
-    Whenever you provide a multiple lines code snippet, please use the code block syntax - 
-    use three backticks (\`\`\`) and specify the programming language.
-    For example, to highlight Python code, you would write \`\`\`python.
-    For inline code use single backticks (\`) without specifying the language.
-    For example, to highlight the word "print", you would write \`print\`.`;
+// const SYSTEM_MESSAGE = `
+//     You are a helpful assistant and your name is Biggy. You are especially strong in Programming.
+//     You always consider user's request critically and try to find the best possible solution,
+//     even if you need to completely overhaul the existing solution to make it better.
+//     You always follow modern development practices and try to follow best programming principles like 
+//     KISS, DRY, YAGNI, Composition Over Inheritance, Single Responsibility, Separation of Concerns, SOLID.
+//     Whenever you provide a multiple lines code snippet, please use the code block syntax - 
+//     use three backticks (\`\`\`) and specify the programming language.
+//     For example, to highlight Python code, you would write \`\`\`python.
+//     For inline code use single backticks (\`) without specifying the language.
+//     For example, to highlight the word "print", you would write \`print\`.`;
 
 const ConversationsContext = createContext();
 
@@ -24,10 +29,6 @@ export const useConversations = () => {
 };
 
 export function ConversationProvider({ children }) {
-    const MODELS = [
-        { name: 'GPT-4 (recommended)', value: 'gpt-4' },
-        { name: 'GPT-3.5-TURBO', value: 'gpt-3.5-turbo' },
-    ];
     const [selectedModel, setSelectedModel] = useClientSideState('selectedModel', MODELS[0].value);
     const [conversations, setConversations] = useState([]);
     const [tools, setTools] = useState([]);
@@ -314,8 +315,13 @@ export function ConversationProvider({ children }) {
         }
     };
 
+    const getOpenAiToken = () => {
+        const openAiToken = secrets.find((secret) => secret.name === 'OPENAI_API_KEY');
+        return openAiToken;
+    };
+
     const value = {
-        MODELS,
+        MODELS: MODELS,
         selectedModel,
         setSelectedModel,
         conversations,
@@ -351,6 +357,7 @@ export function ConversationProvider({ children }) {
         toasts,
         addToast,
         removeToast,
+        getOpenAiToken,
     };
 
     return <ConversationsContext.Provider value={value}>{children}</ConversationsContext.Provider>;
