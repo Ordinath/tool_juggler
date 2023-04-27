@@ -9,6 +9,31 @@
 Python 3.10 is required to successfully install and run the application in an automated manner. The application was tested on Python 3.10.10. 
 Python 3.11 and 3.9 had issues with the langchain and chromadb libraries installations.
 
+#### Installing Python 3.10
+
+##### macOS and Linux
+
+You can install Python 3.10 using Homebrew:
+
+```bash
+brew install python@3.10
+```
+
+Make sure to add Python 3.10 to your PATH:
+
+```bash
+echo 'export PATH="/usr/local/opt/python@3.10/bin:$PATH"' >> ~/.bash_profile
+source ~/.bash_profile
+```
+
+##### Windows
+
+Download and install the Python 3.10 executable installer from the official Python website:
+
+[https://www.python.org/downloads/release/python-3100/](https://www.python.org/downloads/release/python-3100/)
+
+During the installation process, make sure to check the box "Add Python 3.10 to PATH" before proceeding.
+
 ### Installation and Running
 
 You can use the automated installation and running process to set up the project. 
