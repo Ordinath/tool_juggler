@@ -144,6 +144,21 @@ def add_core_tool(app, tool_info):
             db.session.add(core_tool)
             db.session.commit()
 
+
+def add_secret_if_not_exists(app, secret_name, secret_value):
+    with app.app_context():
+        # Check if the secret already exists
+        secret = Secret.query.filter_by(key=secret_name).first()
+
+        # If the secret does not exist, create it
+        if not secret:
+            create_secret(secret_name, secret_value)
+
+            print(f"{secret_name} secret created with value '{secret_value}'")
+        else:
+            print(f"{secret_name} secret already exists")
+
+
 def cut_string(string, max_len):
     if len(string) > max_len:
         return string[:max_len]
