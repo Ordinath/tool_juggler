@@ -316,7 +316,7 @@ export function ConversationProvider({ children }) {
     };
 
     const getOpenAiToken = () => {
-        const openAiToken = secrets.find((secret) => secret.name === 'OPENAI_API_KEY');
+        const openAiToken = secrets.find((secret) => secret.key === 'OPENAI_API_KEY')['value'];
         return openAiToken;
     };
 
