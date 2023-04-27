@@ -1,7 +1,7 @@
 {
   "name": "tool_juggler",
   "version": "0.0.1",
-  "description": "juggle custom python plugins with Tool Juggler",
+  "description": "juggle custom brewed python plugins with Tool Juggler",
   "author": "Ordinath",
   "license": "MIT"
 }
