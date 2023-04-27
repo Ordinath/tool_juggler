@@ -1,6 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import { Conversation, Message, Role, Tool, Secret } from '../types';
-const API_URL = process.env.NEXT_PUBLIC_PY_BACKEND_API_URL;
+// const API_URL = process.env.NEXT_PUBLIC_PY_BACKEND_API_URL;
+import { API_URL } from '../constants';
 
 console.log('API_URL', API_URL);
 

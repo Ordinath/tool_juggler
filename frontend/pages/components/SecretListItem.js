@@ -41,7 +41,10 @@ export default function SecretListItem({ secret, index }) {
                 disabled={!isEditing}
                 value={isEditing ? editedValue : secret.value}
                 onChange={(e) => setEditedValue(e.target.value)}
-                InputProps={{ sx: { fontSize: '0.8rem', padding: 0 } }}
+                InputProps={{
+                    sx: { fontSize: '0.8rem', padding: 0 },
+                    type: !isEditing ? (secret.value === 'TO_BE_PROVIDED' ? 'text' : 'password') : 'text',
+                }}
                 InputLabelProps={{ sx: { fontSize: '0.8rem' } }}
             />
             {isEditing || isDeleting ? (
