@@ -34,4 +34,5 @@ register_routes(app)
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=False, port=5005, use_reloader=False)
+    # app.run(debug=False, port=5005, use_reloader=False)
+    app.run(debug=False, use_reloader=False)

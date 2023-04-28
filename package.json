@@ -3,16 +3,5 @@
   "version": "0.1",
   "description": "juggle custom brewed python plugins with Tool Juggler",
   "author": "Ordinath",
-  "license": "MIT",
-  "scripts": {
-    "install": "python3 install.py",
-    "start": "concurrently \"npm run start-backend\" \"npm run start-frontend\" \"npm run open-browser\"",
-    "start-backend": "python3 start_backend.py",
-    "start-frontend": "cd frontend && npm run dev",
-    "open-browser": "python3 open_browser.py"
-  },
-  "dependencies": {
-    "concurrently": "^8.0.1",
-    "cross-env": "^7.0.3"
-  }
+  "license": "MIT"
 }
