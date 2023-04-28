@@ -2,6 +2,14 @@
 
 ### https://discord.gg/qzTwvKkc
 
+
+## docker installation
+
+```docker build -t tool_juggler_backend ./backend```
+```docker build -t tool_juggler_frontend ./frontend```
+```docker run --name tj_backend -p 5005:5005 tool_juggler_backend```
+```docker run --name tj_frontend -p 3000:3000 tool_juggler_frontend```
+
 ## Prerequisites, Installation and Running
 
 ### Prerequisites

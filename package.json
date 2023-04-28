@@ -1,7 +1,12 @@
 {
-  "name": "tool_juggler",
-  "version": "0.1",
-  "description": "juggle custom brewed python plugins with Tool Juggler",
-  "author": "Ordinath",
-  "license": "MIT"
+    "name": "tool_juggler",
+    "version": "0.1",
+    "description": "juggle custom brewed python plugins with Tool Juggler",
+    "author": "Ordinath",
+    "license": "MIT",
+    "scripts": {
+        "install": "docker-compose build",
+        "start": "docker-compose up",
+        "stop": "docker-compose down"
+    }
 }
