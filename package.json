@@ -5,8 +5,10 @@
     "author": "Ordinath",
     "license": "MIT",
     "scripts": {
-        "install": "docker-compose build",
-        "start": "docker-compose up",
-        "stop": "docker-compose down"
+        "build": "docker-compose build",
+        "start": "docker-compose up & open http://localhost:3000"
+    },
+    "devDependencies": {
+        "open": "^9.1.0"
     }
 }

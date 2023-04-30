@@ -1,159 +1,71 @@
-# alpha version - raw and unpolished
+# Tool Juggler - Alpha Version
 
-### https://discord.gg/qzTwvKkc
+![Tool Juggler Demo](https://github.com/Ordinath/tool_juggler/raw/main/assets/tool_juggler_demo.gif)
 
+Tool Juggler is an application that allows you to create custom tools for your AI assistant and add them on-the-fly. Share your custom tools and use them seamlessly as you go.
 
-## docker installation
+*Special thanks to the [langchain](https://github.com/hwchase17/langchain) and [chromadb](https://github.com/chroma-core/chroma) libraries. Without them, this project wouldn't be possible.*
 
-```docker build -t tool_juggler_backend ./backend```
-```docker build -t tool_juggler_frontend ./frontend```
-```docker run --name tj_backend -p 5005:5005 tool_juggler_backend```
-```docker run --name tj_frontend -p 3000:3000 tool_juggler_frontend```
+For instructions on how to create tools, add them to your AI assistant, and seamlessly integrate them, check out the [Tool Uploading Documentation](https://github.com/Ordinath/tool_juggler/blob/main/tool_examples/readme.md#tool-juggler---tool-uploading-documentation).
 
-## Prerequisites, Installation and Running
+**Please note: This is the alpha version, which is raw and unpolished. Use it at your own risk. It is not recommended to deploy it on remote servers or cloud providers, as it is not secure in terms of passing information between backend and frontend. Running it locally is safe for execution.**
 
-### Prerequisites
+While it is possible to run Tool Juggler locally without Docker, it is highly recommended to use Docker for convenience. If you choose to run it without Docker, you will need Python 3.10.10 and may have to apply some fixes to the langchain and chromadb libraries.
 
-Python 3.10 is required to successfully install and run the application in an automated manner. The application was tested on Python 3.10.10. 
-Python 3.11 and 3.9 had issues with the langchain and chromadb libraries installations.
+## Table of Contents
+1. [Prerequisites](#prerequisites)
+2. [Installation and Running](#installation-and-running)
+3. [Roadmap](#roadmap)
 
-#### Installing Python 3.10
+## Prerequisites
 
-##### macOS and Linux
+In order to run Tool Juggler, you must have Docker installed. This is the preferred way to run the app as of now. You can download and install Docker from the official website:
 
-You can install Python 3.10 using Homebrew:
+[Docker Desktop for Mac and Windows](https://www.docker.com/products/docker-desktop)
+
+[Docker for Linux](https://docs.docker.com/engine/install/)
+
+## Installation and Running
+
+1. Clone the repository:
 
 ```bash
-brew install python@3.10
+git clone https://github.com/Ordinath/tool_juggler.git
 ```
 
-Make sure to add Python 3.10 to your PATH:
+2. Navigate to the project directory:
 
 ```bash
-echo 'export PATH="/usr/local/opt/python@3.10/bin:$PATH"' >> ~/.bash_profile
-source ~/.bash_profile
+cd tool_juggler
 ```
 
-##### Windows
+3. Install the dependencies:
 
-Download and install the Python 3.10 executable installer from the official Python website:
+```bash
+npm install
+```
 
-[https://www.python.org/downloads/release/python-31010/](https://www.python.org/downloads/release/python-31010/)
+4. Build the Docker containers:
 
-During the installation process, make sure to check the box "Add Python 3.10 to PATH" before proceeding.
+```bash
+npm run build
+```
 
-### Installation and Running
+5. Start the Docker containers:
 
-You can use the automated installation and running process to set up the project. 
-In case this doesn't work for any reason, you can follow the steps provided below for manual installation and running.
-
-#### Automated Installation and Running
-
-To use the automated installation script, run the following command:
-
-```npm install```
-
-This will detect your operating system and execute the appropriate installation script (`install.sh` for Linux/macOS or `install.bat` for Windows).
-
-To start the application automatically, run the following command:
-
-```npm start```
+```bash
+npm start
+```
 
 This will start both the backend and frontend and open your browser at [http://localhost:3000](http://localhost:3000).
 
-#### Manual Installation
+## Roadmap
 
-Follow the steps provided below for manual installation and running if the automated process doesn't work as expected.
+The following features are planned or have been completed:
 
-##### Backend installation/setup
-
-This was tested and ran on Python **3.10.10**. Both 3.11 and 3.09 had issues with the langchain and chromadb libraries installations.
-
-###### Install dependencies:
-
-```cd backend```
-
-```python3 --version``` # should be 3.10.10
-
-```python3 -m venv venv```
-
-```
-# Linux/macOS
-source venv/bin/activate
-# or Windows
-venv\Scripts\activate
-```
-
-```pip install -r requirements.txt```
-
-###### Fix issues in libraries:
-
-Replace broken code in langchain library (to properly recognize chat model stream end):
-
-```cd venv/lib/python3.10/site-packages/langchain/chat_models```
-
-Open `base.py` and replace the following code:
-
-```
-        return self._generate(messages, stop=stop).generations[0].message
-```
-
-with
-
-```
-        output = self._generate(messages, stop=stop)
-        self.callback_manager.on_llm_end(output, verbose=self.verbose)
-        return output.generations[0].message
-```
-
-Replace broken code in chroma library (to intake optional embedding_function parameter):
-
-```cd venv/lib/python3.10/site-packages/chromadb/api```
-
-Open `__init__.py` and replace the following code on line 85:
-
-```
-    def get_or_create_collection(self, name: str, metadata: Optional[Dict] = None) -> Collection:
-```
-
-with
-
-```
-    def get_or_create_collection(
-        self,
-        name: str,
-        metadata: Optional[Dict] = None,
-        embedding_function: Optional[Callable] = None,
-        ) -> Collection:
-```
-
-##### Frontend installation/setup
-
-```cd frontend```
-
-```npm install```
-
-#### Running the project manually
-
-##### Launch the backend:
-
-```cd backend```
-
-```
-# Linux/macOS
-source venv/bin/activate
-# or Windows
-venv\Scripts\activate
-```
-
-```python3 app.py```
-
-This should launch the backend on [http://localhost:5005](http://localhost:5005)
-
-##### Launch the frontend:
-
-```cd frontend```
-
-```npm run dev```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the Tool Juggler page.
+- [x] PDF question and answer tool auto-generation
+- [ ] Proper login authentication for multiple users to use the application with a single backend
+- [ ] Secure handling of secrets for backend and frontend, allowing deployment on remote servers
+- [ ] Native compatibility for uploading CSV files and auto-generating CSV data analysis tools
+- [ ] Adding semi-autonomous agents along with conversations, capable of being added on-the-fly as packages and supplied with tools
+- [ ] Responsive design for frontend to support convenient usage on mobile devices
