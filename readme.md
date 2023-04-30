@@ -69,3 +69,4 @@ The following features are planned or have been completed:
 - [ ] Native compatibility for uploading CSV files and auto-generating CSV data analysis tools
 - [ ] Adding semi-autonomous agents along with conversations, capable of being added on-the-fly as packages and supplied with tools
 - [ ] Responsive design for frontend to support convenient usage on mobile devices
+- [ ] Add support of non-OpenAI models in long-term
