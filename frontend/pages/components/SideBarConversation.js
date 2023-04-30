@@ -10,6 +10,7 @@ import DoneIcon from '@mui/icons-material/Done';
 import CancelIcon from '@mui/icons-material/Cancel';
 import TurnedInNotIcon from '@mui/icons-material/TurnedInNot';
 import TurnedInIcon from '@mui/icons-material/TurnedIn';
+import Tooltip from '@mui/material/Tooltip';
 import { useEffect, useState } from 'react';
 import { styled, alpha } from '@mui/material/styles';
 import { useConversations } from './ConversationsContext';
@@ -189,25 +190,27 @@ export default function SideBarConversation({ conversation }) {
                     </Grid>
                 </Grid>
             )}
-            <IconButton
-                edge="end"
-                color="inherit"
-                onClick={() => {
-                    if (conversation.embedded) {
-                        handleDeleteConversationEmbeddings(conversation.id);
-                    } else {
-                        handleUpsertConversationEmbeddings(conversation.id);
-                    }
-                }}
-                sx={{
-                    fontSize: '0.9rem',
-                    position: 'absolute',
-                    bottom: 5.5,
-                    left: 270,
-                }}
-            >
-                {conversation.embedded ? <TurnedInIcon fontSize="inherit" color="primary" /> : <TurnedInNotIcon fontSize="inherit" color="warning" />}
-            </IconButton>
+            <Tooltip title="Toggle to remember conversation in long term memory" enterDelay={250}>
+                <IconButton
+                    edge="end"
+                    color="inherit"
+                    onClick={() => {
+                        if (conversation.embedded) {
+                            handleDeleteConversationEmbeddings(conversation.id);
+                        } else {
+                            handleUpsertConversationEmbeddings(conversation.id);
+                        }
+                    }}
+                    sx={{
+                        fontSize: '0.9rem',
+                        position: 'absolute',
+                        bottom: 5.5,
+                        left: 270,
+                    }}
+                >
+                    {conversation.embedded ? <TurnedInIcon fontSize="inherit" color="primary" /> : <TurnedInNotIcon fontSize="inherit" color="warning" />}
+                </IconButton>
+            </Tooltip>
         </Box>
     );
 }

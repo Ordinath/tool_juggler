@@ -1,6 +1,6 @@
 # Tool Juggler - Alpha Version
 
-![Tool Juggler Demo](https://github.com/Ordinath/tool_juggler/raw/main/assets/tool_juggler_demo.gif)
+![Tool Juggler Demo](https://github.com/Ordinath/tool_juggler/raw/assets/tool_juggler_demo_1.gif)
 
 Tool Juggler is an application that allows you to create custom tools for your AI assistant and add them on-the-fly. Share your custom tools and use them seamlessly as you go.
 
