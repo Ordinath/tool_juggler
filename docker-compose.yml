@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: tool_juggler_backend
+    container_name: tj_backend
+    ports:
+      - "5005:5005"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: tool_juggler_frontend
+    container_name: tj_frontend
+    ports:
+      - "3000:3000"

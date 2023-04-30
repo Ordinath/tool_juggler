@@ -132,7 +132,7 @@ export default function UserInput() {
                         }}
                         endAdornment={
                             <InputAdornment position="end">
-                            <Tooltip title="Cmd+Enter to send" enterDelay={1000}>
+                            <Tooltip title="Cmd+Enter to send" enterDelay={500}>
                                 
                                 <IconButton
                                     edge="end"
@@ -152,7 +152,7 @@ export default function UserInput() {
                                     <SendIcon fontSize="small" />
                                 </IconButton>
                             </Tooltip>
-                                <Tooltip title="Ctrl+R to start/stop recording" enterDelay={1000}>
+                                <Tooltip title="Ctrl+R to start/stop recording" enterDelay={500}>
                                     <IconButton
                                         edge="end"
                                         color="inherit"

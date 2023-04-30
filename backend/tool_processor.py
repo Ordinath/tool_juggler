@@ -148,8 +148,9 @@ class ToolProcessor:
         requirements_file = self.tool_rest_folder / \
             self.manifest_data.get('requirements', '')
         if self.manifest_data.get('requirements') and requirements_file.is_file():
-            subprocess.run([str(BASE_DIR / 'venv' / 'bin' / 'pip'),
-                           'install', '-r', str(requirements_file)])
+            # subprocess.run([str(BASE_DIR / 'venv' / 'bin' / 'pip'),
+            #                'install', '-r', str(requirements_file)])
+            subprocess.run(['pip', 'install', '-r', str(requirements_file)])
 
         if self.manifest_data.get('prep_script'):
             prep_script_file = self.tool_rest_folder / \
