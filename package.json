@@ -6,7 +6,8 @@
     "license": "MIT",
     "scripts": {
         "build": "docker-compose build",
-        "start": "docker-compose up & open http://localhost:3000"
+        "start": "docker-compose up & open http://localhost:3000",
+        "stop": "docker-compose down"
     },
     "devDependencies": {
         "open": "^9.1.0"
