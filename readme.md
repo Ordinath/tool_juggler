@@ -19,6 +19,8 @@ While it is possible to run Tool Juggler locally without Docker, it is highly re
 
 ## Prerequisites
 
+For now the can only work with OpenAI models, thus an OpenAI API Key is a requirement.
+
 In order to run Tool Juggler, you must have Docker installed. This is the preferred way to run the app as of now. You can download and install Docker from the official website:
 
 [Docker Desktop for Mac and Windows](https://www.docker.com/products/docker-desktop)
