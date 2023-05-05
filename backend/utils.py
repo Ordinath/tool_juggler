@@ -2,6 +2,7 @@ import os
 import importlib
 import sys
 from db_models import Conversation, Message, Tool, Embedding, Secret, db
+from auth import get_authenticated_user
 from crypto_utils import encrypt, decrypt
 from flask import current_app
 import re
@@ -26,9 +27,10 @@ def get_secret_value(key):
 def register_tools(app):
 
     with app.app_context():
+        user = get_authenticated_user(app)
         tools = []
-        # Fetch enabled tools from the database
-        enabled_tools = Tool.query.filter_by(enabled=True).all()
+        # Fetch enabled tools from the database for the specified user
+        enabled_tools = Tool.query.filter_by(enabled=True, user_id=user).all()
 
         print(f"Registering {len(enabled_tools)} tools")
 
