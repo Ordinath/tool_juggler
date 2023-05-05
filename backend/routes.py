@@ -390,8 +390,9 @@ def register_routes(app):
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
+        app.current_user_id = user.id
 
-        initialize_core_tools(app)
+        initialize_core_tools(app, user.id)
 
         return jsonify({"message": "User registered successfully"}), 201
 

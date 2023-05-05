@@ -32,6 +32,10 @@ def register_vectorstores(app):
 
 
 def add_vectorstore_to_app(app, init_script_path):
+    # if there are no vectorstores, we need to initiate them in app
+    if not hasattr(app, 'vectorstores'):
+        app.vectorstores = {}
+
     module_name = os.path.splitext(os.path.basename(init_script_path))[0]
 
     spec = importlib.util.spec_from_file_location(
