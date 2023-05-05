@@ -3,16 +3,14 @@ import os
 import glob
 import importlib
 import importlib.util
-from auth import get_authenticated_user
 
 
 def register_vectorstores(app):
-    user_id = str(get_authenticated_user(app).id)
     app.vectorstores = {}
 
     private_directory = os.path.join(
         os.path.dirname(
-            __file__), 'resources', 'private', user_id, 'vectorstore_initializers'
+            __file__), 'resources', 'private', app.current_user_id, 'vectorstore_initializers'
     )
     common_directory = os.path.join(
         os.path.dirname(__file__), 'resources', 'common'
@@ -20,7 +18,7 @@ def register_vectorstores(app):
 
     # Find all subdirectories with vectorstore_initializers in the common directory
     common_subdirectories = glob.glob(
-        f"{common_directory}/*/*/vectorstore_initializers")
+        f"{common_directory}/*/vectorstore_initializers")
 
     # Combine common subdirectories and the private directory
     root_directories = common_subdirectories + [private_directory]

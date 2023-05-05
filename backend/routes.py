@@ -409,6 +409,8 @@ def register_routes(app):
             algorithm="HS256",
         )
 
+        app.current_user_id = user.id
+
         # we initiate the app for logged in user
         register_vectorstores(app)
         print(app.vectorstores)

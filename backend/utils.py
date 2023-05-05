@@ -6,19 +6,23 @@ from auth import get_authenticated_user
 from crypto_utils import encrypt, decrypt
 from flask import current_app
 import re
+from sqlalchemy import or_
 
 
 def create_secret(key, value):
     with current_app.app_context():
+
         encrypted_value = encrypt(value)
-        new_secret = Secret(key=key, value=encrypted_value)
+        new_secret = Secret(key=key, value=encrypted_value,
+                            user_id=current_app.current_user_id)
         db.session.add(new_secret)
         db.session.commit()
 
 
 def get_secret_value(key):
     with current_app.app_context():
-        secret = Secret.query.filter_by(key=key).first()
+        secret = Secret.query.filter_by(
+            key=key, user_id=current_app.current_user_id).first()
         if secret:
             return decrypt(secret.value)
         return None
@@ -27,10 +31,13 @@ def get_secret_value(key):
 def register_tools(app):
 
     with app.app_context():
-        user = get_authenticated_user(app)
         tools = []
-        # Fetch enabled tools from the database for the specified user
-        enabled_tools = Tool.query.filter_by(enabled=True, user_id=user).all()
+
+        enabled_tools = Tool.query.filter(
+            (Tool.user_id == app.current_user_id,
+             Tool.enabled == True, Tool.tool_type == 'private'),
+            or_(Tool.tool_type == 'common', Tool.enabled == True)
+        ).all()
 
         print(f"Registering {len(enabled_tools)} tools")
 

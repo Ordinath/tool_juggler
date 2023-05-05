@@ -7,7 +7,6 @@ import os
 from vectorstores import add_vectorstore_to_app
 from utils import to_snake_case, normalize_string, cut_string
 import nbconvert
-from auth import get_authenticated_user
 from io import StringIO
 import re
 from db_models import Tool, db
@@ -22,10 +21,9 @@ BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
 
 class ToolProcessor:
-    def __init__(self, app, file_path):
+    def __init__(self, app, user_id, file_path):
         self.app = app
-        self.user = get_authenticated_user(app)
-        self.user_id = str(self.user.id)
+        self.user_id = app.current_user_id
         self.file_path = Path(file_path)
         self.temp_folder = BASE_DIR / 'temp_tools'
         self.manifest_data = None
@@ -368,6 +366,7 @@ def remove_tool_files(tool):
             vectorstore_file.unlink()
 
     # Remove rest folder
-    rest_folder = Path(BASE_DIR, 'resources', tool_type, tool_user_id, 'rest', tool_name)
+    rest_folder = Path(BASE_DIR, 'resources', tool_type,
+                       tool_user_id, 'rest', tool_name)
     if rest_folder.exists():
         shutil.rmtree(rest_folder)

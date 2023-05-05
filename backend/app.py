@@ -15,12 +15,11 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///conversations.db'
+app.current_user_id = None
 db.init_app(app)
 with app.app_context():
     db.create_all()
 CORS(app)
-
-
 
 # we have to transfer this logic on the after login stage:
 
