@@ -9,10 +9,10 @@ import jwt
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 from db_models import User, Conversation, Message, Embedding, Tool, Secret, db
-from utils import register_tools, upsert_embeddings, initialize_core_tools
+from utils import register_tools, upsert_embeddings
 from auth import get_authenticated_user, require_auth
 from tool_juggler import tool_juggler_agent
-from tool_processor import ToolProcessor, remove_tool_files
+from tool_processor import ToolProcessor, remove_tool_files, initialize_core_tools
 import os
 from werkzeug.utils import secure_filename
 from functools import wraps
@@ -20,8 +20,8 @@ from werkzeug.exceptions import HTTPException
 from crypto_utils import encrypt, decrypt
 from functools import wraps
 from vectorstores import register_vectorstores
-from utils import add_core_tool, add_secret_if_not_exists
-from core_tools import long_term_memory_tool
+# from utils import add_core_tool, add_secret_if_not_exists
+# from core_tools import long_term_memory_tool
 # app.config['UPLOAD_FOLDER'] = 'path/to/your/upload/directory'
 
 

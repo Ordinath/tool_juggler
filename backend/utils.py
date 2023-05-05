@@ -8,7 +8,44 @@ from flask import current_app
 import re
 from sqlalchemy import or_
 from pathlib import Path
-from tool_processor import ToolProcessor
+
+
+def normalize_string(str):
+    # Replace underscores with spaces
+    str = str.replace('_', ' ')
+
+    # Remove special characters except spaces, capitalize words
+    str = re.sub(r'[^a-zA-Z0-9 ]', '', str).title()
+
+    return str
+
+
+def to_snake_case(name):
+    name = name.strip().lower()
+    name = re.sub(r'\W+', ' ', name)  # Remove any special characters
+    name = name.replace(' ', '_')
+    return name
+
+
+def add_secret_if_not_exists(app, secret_name, secret_value):
+    with app.app_context():
+        # Check if the secret already exists
+        secret = Secret.query.filter_by(key=secret_name).first()
+
+        # If the secret does not exist, create it
+        if not secret:
+            create_secret(secret_name, secret_value)
+
+            print(f"{secret_name} secret created with value '{secret_value}'")
+        else:
+            print(f"{secret_name} secret already exists")
+
+
+def cut_string(string, max_len):
+    if len(string) > max_len:
+        return string[:max_len]
+    else:
+        return string
 
 
 def get_vectorstore_persist_directory(app, tool_type, vectorstore_name):
@@ -120,37 +157,6 @@ def upsert_embeddings(app, conversation_id, vectorstore, embedding_strings):
     return new_embeddings
 
 
-def normalize_string(str):
-    # Replace underscores with spaces
-    str = str.replace('_', ' ')
-
-    # Remove special characters except spaces, capitalize words
-    str = re.sub(r'[^a-zA-Z0-9 ]', '', str).title()
-
-    return str
-
-
-def to_snake_case(name):
-    name = name.strip().lower()
-    name = re.sub(r'\W+', ' ', name)  # Remove any special characters
-    name = name.replace(' ', '_')
-    return name
-
-
-def initialize_core_tools(app):
-    # for every zip file in the core_tools directory we process it through the tool_processor
-    core_tools_directory = os.path.join(
-        os.path.dirname(__file__), 'core_tools')
-
-    for dirpath, _, filenames in os.walk(core_tools_directory):
-        for file in filenames:
-            if file.endswith(".zip"):
-                zip_path = os.path.join(dirpath, file)
-
-                tool_processor = ToolProcessor(app, zip_path)
-                processing_result = tool_processor.process_file()
-                print(processing_result)
-
 
 # def add_core_tool(app, tool_info):
 #     with app.app_context():
@@ -177,24 +183,3 @@ def initialize_core_tools(app):
 
 #             db.session.add(core_tool)
 #             db.session.commit()
-
-
-def add_secret_if_not_exists(app, secret_name, secret_value):
-    with app.app_context():
-        # Check if the secret already exists
-        secret = Secret.query.filter_by(key=secret_name).first()
-
-        # If the secret does not exist, create it
-        if not secret:
-            create_secret(secret_name, secret_value)
-
-            print(f"{secret_name} secret created with value '{secret_value}'")
-        else:
-            print(f"{secret_name} secret already exists")
-
-
-def cut_string(string, max_len):
-    if len(string) > max_len:
-        return string[:max_len]
-    else:
-        return string

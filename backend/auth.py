@@ -2,7 +2,7 @@ from functools import wraps
 from flask import request, jsonify
 import jwt
 from db_models import User
-
+from flask import current_app
 
 def get_authenticated_user(app):
     token = request.headers.get('Authorization')
@@ -21,10 +21,10 @@ def get_authenticated_user(app):
     return user
 
 
-def require_auth(app, f):
+def require_auth(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        user = get_authenticated_user(app)
+        user = get_authenticated_user(current_app)
         if user is None:
             return jsonify({"error": "Unauthorized"}), 401
         return f(*args, **kwargs)

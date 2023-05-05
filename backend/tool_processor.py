@@ -5,12 +5,9 @@ from pathlib import Path
 import subprocess
 import os
 from vectorstores import add_vectorstore_to_app
-from utils import to_snake_case, normalize_string, cut_string
-import nbconvert
-from io import StringIO
+from utils import to_snake_case, normalize_string, cut_string, create_secret, get_secret_value
 import re
 from db_models import Tool, db
-from utils import create_secret, get_secret_value
 from string import Template
 import importlib
 import importlib.util
@@ -290,6 +287,21 @@ class ToolProcessor:
         shutil.rmtree(f'temp_tools/{pdf_tool_name}')
 
         return os.path.abspath(zip_path)
+
+
+def initialize_core_tools(app):
+    # for every zip file in the core_tools directory we process it through the tool_processor
+    core_tools_directory = os.path.join(
+        os.path.dirname(__file__), 'core_tools')
+
+    for dirpath, _, filenames in os.walk(core_tools_directory):
+        for file in filenames:
+            if file.endswith(".zip"):
+                zip_path = os.path.join(dirpath, file)
+
+                tool_processor = ToolProcessor(app, zip_path)
+                processing_result = tool_processor.process_file()
+                print(processing_result)
 
 
 def add_env_vars_to_database(env_vars, env_file_path):

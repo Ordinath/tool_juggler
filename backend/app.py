@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 from db_models import db
 from routes import register_routes
 from vectorstores import register_vectorstores
-from utils import add_core_tool, add_secret_if_not_exists
-from core_tools import long_term_memory_tool
+# from utils import add_core_tool, add_secret_if_not_exists
+# from core_tools import long_term_memory_tool
 import crypto_utils
 
 load_dotenv()
