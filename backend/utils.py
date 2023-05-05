@@ -7,6 +7,16 @@ from crypto_utils import encrypt, decrypt
 from flask import current_app
 import re
 from sqlalchemy import or_
+from pathlib import Path
+from tool_processor import ToolProcessor
+
+
+def get_vectorstore_persist_directory(app, tool_type, vectorstore_name):
+    BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
+    persist_directory = os.path.join(
+        BASE_DIR, 'resources', tool_type, app.current_user_id, 'vectorstores', vectorstore_name)
+
+    return persist_directory
 
 
 def create_secret(key, value):
@@ -127,31 +137,46 @@ def to_snake_case(name):
     return name
 
 
-def add_core_tool(app, tool_info):
-    with app.app_context():
-        # Check if the core tool already exists
-        core_tool = Tool.query.filter_by(name=tool_info["name"]).first()
+def initialize_core_tools(app):
+    # for every zip file in the core_tools directory we process it through the tool_processor
+    core_tools_directory = os.path.join(
+        os.path.dirname(__file__), 'core_tools')
 
-        # If the core tool does not exist, create it
-        if not core_tool:
-            # Construct the dynamic path to the tool definition script
-            base_path = os.path.dirname(os.path.abspath(__file__))
-            tool_definition_path = os.path.join(
-                base_path, tool_info["tool_definition_path"]
-            )
+    for dirpath, _, filenames in os.walk(core_tools_directory):
+        for file in filenames:
+            if file.endswith(".zip"):
+                zip_path = os.path.join(dirpath, file)
 
-            core_tool = Tool(
-                name=tool_info["name"],
-                enabled=tool_info["enabled"],
-                core=tool_info["core"],
-                tool_type=tool_info["tool_type"],
-                tool_definition_path=tool_definition_path,
-                manifest=tool_info.get("manifest"),
-                description=tool_info["description"],
-            )
+                tool_processor = ToolProcessor(app, zip_path)
+                processing_result = tool_processor.process_file()
+                print(processing_result)
 
-            db.session.add(core_tool)
-            db.session.commit()
+
+# def add_core_tool(app, tool_info):
+#     with app.app_context():
+#         # Check if the core tool already exists
+#         core_tool = Tool.query.filter_by(name=tool_info["name"], user_id=app.current_user_id).first()
+
+#         # If the core tool does not exist, create it
+#         if not core_tool:
+#             # Construct the dynamic path to the tool definition script
+#             base_path = os.path.dirname(os.path.abspath(__file__))
+#             tool_definition_path = os.path.join(
+#                 base_path, tool_info["tool_definition_path"]
+#             )
+
+#             core_tool = Tool(
+#                 name=tool_info["name"],
+#                 enabled=tool_info["enabled"],
+#                 core=tool_info["core"],
+#                 tool_type=tool_info["tool_type"],
+#                 tool_definition_path=tool_definition_path,
+#                 manifest=tool_info.get("manifest"),
+#                 description=tool_info["description"],
+#             )
+
+#             db.session.add(core_tool)
+#             db.session.commit()
 
 
 def add_secret_if_not_exists(app, secret_name, secret_value):

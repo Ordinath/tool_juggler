@@ -9,7 +9,7 @@ import jwt
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 from db_models import User, Conversation, Message, Embedding, Tool, Secret, db
-from utils import register_tools, upsert_embeddings
+from utils import register_tools, upsert_embeddings, initialize_core_tools
 from auth import get_authenticated_user, require_auth
 from tool_juggler import tool_juggler_agent
 from tool_processor import ToolProcessor, remove_tool_files
@@ -391,6 +391,8 @@ def register_routes(app):
         db.session.add(user)
         db.session.commit()
 
+        initialize_core_tools(app)
+
         return jsonify({"message": "User registered successfully"}), 201
 
     @app.route('/login', methods=['POST'])
@@ -414,8 +416,8 @@ def register_routes(app):
         # we initiate the app for logged in user
         register_vectorstores(app)
         print(app.vectorstores)
-        add_core_tool(app, long_term_memory_tool)
-        add_secret_if_not_exists(app, "OPENAI_API_KEY", "TO_BE_PROVIDED")
+        # add_core_tool(app, long_term_memory_tool)
+        # add_secret_if_not_exists(app, "OPENAI_API_KEY", "TO_BE_PROVIDED")
 
         return jsonify({"token": token})
 

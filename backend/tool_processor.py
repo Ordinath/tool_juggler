@@ -167,7 +167,7 @@ class ToolProcessor:
             name=self.manifest_data['name'],
             user_id=self.user_id,
             enabled=True,
-            core=False,
+            core=self.manifest_data['core'] if 'core' in self.manifest_data else False,
             tool_type=self.tool_type,
             manifest=self.manifest_data,
             description=tool_description,

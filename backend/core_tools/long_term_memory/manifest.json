@@ -1,0 +1,7 @@
+{
+    "name": "Long Term Memory",
+    "core": true,
+    "tool_type": "private",
+    "tool_definition": "long_term_memory_tool.py",
+    "vectorstore_init": "init_vectorstore_long_term_memory.py"
+}
