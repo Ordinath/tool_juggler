@@ -19,6 +19,9 @@ from functools import wraps
 from werkzeug.exceptions import HTTPException
 from crypto_utils import encrypt, decrypt
 from functools import wraps
+from vectorstores import register_vectorstores
+from utils import add_core_tool, add_secret_if_not_exists
+from core_tools import long_term_memory_tool
 # app.config['UPLOAD_FOLDER'] = 'path/to/your/upload/directory'
 
 
@@ -351,7 +354,7 @@ def register_routes(app):
     @app.route('/secrets/<string:secret_id>', methods=['GET', 'PUT', 'DELETE'])
     @require_auth
     def secret(secret_id):
-        user = get_authenticated_user()
+        user = get_authenticated_user(app)
         secret = Secret.query.get_or_404(secret_id)
 
         if secret.user_id != user.id:
@@ -405,6 +408,12 @@ def register_routes(app):
             app.config['JWT_SECRET_KEY'],
             algorithm="HS256",
         )
+
+        # we initiate the app for logged in user
+        register_vectorstores(app)
+        print(app.vectorstores)
+        add_core_tool(app, long_term_memory_tool)
+        add_secret_if_not_exists(app, "OPENAI_API_KEY", "TO_BE_PROVIDED")
 
         return jsonify({"token": token})
 
