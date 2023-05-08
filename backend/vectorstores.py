@@ -3,14 +3,16 @@ import os
 import glob
 import importlib
 import importlib.util
+from auth import get_authenticated_user
 
 
 def register_vectorstores(app):
     app.vectorstores = {}
+    user = get_authenticated_user()
 
     private_directory = os.path.join(
         os.path.dirname(
-            __file__), 'resources', 'private', app.current_user_id, 'vectorstore_initializers'
+            __file__), 'resources', 'private', user.id, 'vectorstore_initializers'
     )
     common_directory = os.path.join(
         os.path.dirname(__file__), 'resources', 'common'

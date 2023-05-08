@@ -3,7 +3,9 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import base64
 import os
-from dotenv import set_key
+from dotenv import load_dotenv, set_key
+
+load_dotenv()
 
 # jwt encryption
 jwt_secret_key = os.environ.get('JWT_SECRET_KEY')

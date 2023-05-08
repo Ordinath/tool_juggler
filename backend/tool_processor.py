@@ -13,15 +13,15 @@ import importlib
 import importlib.util
 import inspect
 from datetime import datetime
+from flask import g, current_app
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
 
 class ToolProcessor:
-    def __init__(self, app, file_path, user_id = None):
-        self.app = app
-        # self.user_id = user_id || app.current_user_id
-        self.user_id = user_id if user_id else app.current_user_id
+    def __init__(self, file_path):
+        self.app = current_app
+        self.user_id = g.user.id
         self.file_path = Path(file_path)
         self.temp_folder = BASE_DIR / 'temp_tools'
         self.manifest_data = None
@@ -290,7 +290,7 @@ class ToolProcessor:
         return os.path.abspath(zip_path)
 
 
-def initialize_core_tools(app, user_id):
+def initialize_core_tools():
     # for every zip file in the core_tools directory we process it through the tool_processor
     core_tools_directory = os.path.join(
         os.path.dirname(__file__), 'core_tools')
@@ -300,7 +300,7 @@ def initialize_core_tools(app, user_id):
             if file.endswith(".zip"):
                 zip_path = os.path.join(dirpath, file)
 
-                tool_processor = ToolProcessor(app, zip_path, user_id)
+                tool_processor = ToolProcessor(zip_path)
                 processing_result = tool_processor.process_file()
                 print(processing_result)
 
