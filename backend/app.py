@@ -1,17 +1,14 @@
-import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from dotenv import load_dotenv
 
 from db_models import db
 from routes import register_routes
-from vectorstores import register_vectorstores
-# from utils import add_core_tool, add_secret_if_not_exists
-# from core_tools import long_term_memory_tool
+
 import crypto_utils
 
 load_dotenv()
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///conversations.db'
@@ -31,5 +28,4 @@ CORS(app)
 register_routes(app)
 
 if __name__ == '__main__':
-    # app.run(debug=False, port=5005, use_reloader=False)
     app.run(debug=False, use_reloader=False)
