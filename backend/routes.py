@@ -4,13 +4,10 @@ from langchain.memory import ConversationBufferMemory
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from datetime import datetime, timedelta
 from sqlalchemy import exc
-import chromadb
 import jwt
-from chromadb.config import Settings
-from chromadb.utils import embedding_functions
 from db_models import User, Conversation, Message, Embedding, Tool, Secret, db
 from utils import register_tools, upsert_embeddings
-from auth import get_authenticated_user, require_auth
+from auth import require_auth
 from tool_juggler import tool_juggler_agent
 from tool_processor import ToolProcessor, remove_tool_files, initialize_core_tools
 import os
@@ -20,7 +17,7 @@ from werkzeug.exceptions import HTTPException
 from crypto_utils import encrypt, decrypt
 from functools import wraps
 from vectorstores import register_vectorstores
-# from utils import add_core_tool, add_secret_if_not_exists
+from utils import add_secret_if_not_exists
 # from core_tools import long_term_memory_tool
 # app.config['UPLOAD_FOLDER'] = 'path/to/your/upload/directory'
 
@@ -390,9 +387,11 @@ def register_routes(app):
         db.session.add(new_user)
         db.session.commit()
 
-        # Set the user to newly created user for the current request to proceed with initialization 
+        # Set the user to newly created user for the current request to proceed with initialization
         g.user = new_user
+        print('register g: ', g.__dict__)
         initialize_core_tools()
+        add_secret_if_not_exists(app, "OPENAI_API_KEY", "TO_BE_PROVIDED")
 
         return jsonify({"message": "User registered successfully"}), 201
 
@@ -413,12 +412,11 @@ def register_routes(app):
         )
 
         g.user = user
+        print('login g: ', g.__dict__)
 
         # we initiate the app for logged in user
         register_vectorstores(app)
         print(app.vectorstores)
-        # add_core_tool(app, long_term_memory_tool)
-        # add_secret_if_not_exists(app, "OPENAI_API_KEY", "TO_BE_PROVIDED")
 
         return jsonify({"token": token})
 

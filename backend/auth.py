@@ -5,7 +5,16 @@ from db_models import User
 
 
 def get_authenticated_user():
+    # print all g variables:
+    print('g: ', g.__dict__)
+
+    if hasattr(g, 'user') and g.user is not None:
+        return g.user
+
+    print('request ', request.headers)
+
     token = request.headers.get('Authorization')
+
     if not token:
         return None
 

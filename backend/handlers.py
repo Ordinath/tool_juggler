@@ -1,8 +1,9 @@
 from flask import g
-import auth
+from auth import get_authenticated_user
 
 
 def register_handlers(app):
     @app.before_request
     def load_user():
-        g.user = auth.get_authenticated_user()
+        g.user = get_authenticated_user()
+        print('before_request g.user: ', g.user)

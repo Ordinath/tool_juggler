@@ -50,26 +50,28 @@ def cut_string(string, max_len):
 
 def get_vectorstore_persist_directory(app, tool_type, vectorstore_name):
     BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
+    user = get_authenticated_user()
     persist_directory = os.path.join(
-        BASE_DIR, 'resources', tool_type, get_authenticated_user().id, 'vectorstores', vectorstore_name)
+        BASE_DIR, 'resources', tool_type, user.id, 'vectorstores', vectorstore_name)
 
     return persist_directory
 
 
 def create_secret(key, value):
     with current_app.app_context():
-
+        user = get_authenticated_user()
         encrypted_value = encrypt(value)
         new_secret = Secret(key=key, value=encrypted_value,
-                            user_id=get_authenticated_user().id)
+                            user_id=user.id)
         db.session.add(new_secret)
         db.session.commit()
 
 
 def get_secret_value(key):
     with current_app.app_context():
+        user = get_authenticated_user()
         secret = Secret.query.filter_by(
-            key=key, user_id=get_authenticated_user().id).first()
+            key=key, user_id=user.id).first()
         if secret:
             return decrypt(secret.value)
         return None
@@ -79,10 +81,10 @@ def register_tools(app):
 
     with app.app_context():
         tools = []
-
+        user = get_authenticated_user()
         enabled_tools = Tool.query.filter(
-            (Tool.user_id == get_authenticated_user().id,
-             Tool.enabled == True, Tool.tool_type == 'private'),
+            (Tool.user_id == user.id, Tool.enabled ==
+             True, Tool.tool_type == 'private'),
             or_(Tool.tool_type == 'common', Tool.enabled == True)
         ).all()
 
@@ -155,5 +157,3 @@ def upsert_embeddings(app, conversation_id, vectorstore, embedding_strings):
         vectorstore['client'].persist()
 
     return new_embeddings
-
-
