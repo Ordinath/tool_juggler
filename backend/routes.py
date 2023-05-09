@@ -1,4 +1,4 @@
-from flask import jsonify, request, Response, stream_with_context, g
+from flask import jsonify, request, Response, stream_with_context, g, session
 from langchain.memory.chat_message_histories.in_memory import ChatMessageHistory
 from langchain.memory import ConversationBufferMemory
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -388,10 +388,10 @@ def register_routes(app):
         db.session.commit()
 
         # Set the user to newly created user for the current request to proceed with initialization
-        g.user = new_user
-        print('register g: ', g.__dict__)
+        session['user_id'] = new_user.id
         initialize_core_tools()
         add_secret_if_not_exists(app, "OPENAI_API_KEY", "TO_BE_PROVIDED")
+        session.pop('user_id', None)
 
         return jsonify({"message": "User registered successfully"}), 201
 
@@ -411,12 +411,12 @@ def register_routes(app):
             algorithm="HS256",
         )
 
-        g.user = user
-        print('login g: ', g.__dict__)
 
         # we initiate the app for logged in user
+        session['user_id'] = user.id
         register_vectorstores(app)
         print(app.vectorstores)
+        session.pop('user_id', None)
 
         return jsonify({"token": token})
 

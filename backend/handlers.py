@@ -3,6 +3,9 @@ from auth import get_authenticated_user
 
 
 def register_handlers(app):
+
+    app.secret_key = 'your-secret-key'
+
     @app.before_request
     def load_user():
         g.user = get_authenticated_user()

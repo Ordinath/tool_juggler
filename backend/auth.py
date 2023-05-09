@@ -1,17 +1,17 @@
 from functools import wraps
-from flask import request, jsonify, g, current_app
+from flask import request, jsonify, g, current_app, session
 import jwt
 from db_models import User
 
 
 def get_authenticated_user():
-    # print all g variables:
-    print('g: ', g.__dict__)
 
-    if hasattr(g, 'user') and g.user is not None:
-        return g.user
-
-    print('request ', request.headers)
+    # this should work on register and login routes to initate all required tools for user
+    user_id = session.get('user_id')
+    print('session user_id: ', user_id)
+    if user_id is not None:
+        user = User.query.get(user_id)
+        return user
 
     token = request.headers.get('Authorization')
 
