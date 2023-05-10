@@ -6,6 +6,13 @@
     "license": "MIT",
     "scripts": {
         "build": "docker-compose build",
+        "build-backend": "docker build -t tool_juggler_backend ./backend",
+        "build-frontend": "docker build -t tool_juggler_frontend ./frontend",
+        "start-backend-local": "cd ./backend && python3.10 -m flask run -p 5005",
+        "start-frontend-local": "cd ./frontend && npm run dev",
+        "start-backend-docker": "docker run --name tj_backend -p 5005:5005 tool_juggler_backend",
+        "start-frontend-docker": "docker run --name tj_frontend -p 3000:3000 tool_juggler_frontend",
+        "start-local": "npm run start-backend-local & npm run start-frontend-local & open http://localhost:3000",
         "start": "docker-compose up & open http://localhost:3000",
         "stop": "docker-compose down"
     },
