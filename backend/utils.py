@@ -5,19 +5,74 @@ from db_models import Conversation, Message, Tool, Embedding, Secret, db
 from crypto_utils import encrypt, decrypt
 from flask import current_app
 import re
+from sqlalchemy import or_
+from pathlib import Path
+from auth import get_authenticated_user
+
+
+def normalize_string(str):
+    # Replace underscores with spaces
+    str = str.replace('_', ' ')
+
+    # Remove special characters except spaces, capitalize words
+    str = re.sub(r'[^a-zA-Z0-9 ]', '', str).title()
+
+    return str
+
+
+def to_snake_case(name):
+    name = name.strip().lower()
+    name = re.sub(r'\W+', ' ', name)  # Remove any special characters
+    name = name.replace(' ', '_')
+    return name
+
+
+def add_secret_if_not_exists(app, secret_name, secret_value):
+    with app.app_context():
+        user = get_authenticated_user()
+        # Check if the secret already exists
+        secret = Secret.query.filter_by(key=secret_name, user_id=user.id).first()
+
+        # If the secret does not exist, create it
+        if not secret:
+            create_secret(secret_name, secret_value)
+
+            print(f"{secret_name} secret created with value '{secret_value}'")
+        else:
+            print(f"{secret_name} secret already exists")
+
+
+def cut_string(string, max_len):
+    if len(string) > max_len:
+        return string[:max_len]
+    else:
+        return string
+
+
+def get_vectorstore_persist_directory(app, tool_type, vectorstore_name):
+    BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
+    user = get_authenticated_user()
+    persist_directory = os.path.join(
+        BASE_DIR, 'resources', tool_type, user.id, 'vectorstores', vectorstore_name)
+
+    return persist_directory
 
 
 def create_secret(key, value):
     with current_app.app_context():
+        user = get_authenticated_user()
         encrypted_value = encrypt(value)
-        new_secret = Secret(key=key, value=encrypted_value)
+        new_secret = Secret(key=key, value=encrypted_value,
+                            user_id=user.id)
         db.session.add(new_secret)
         db.session.commit()
 
 
 def get_secret_value(key):
     with current_app.app_context():
-        secret = Secret.query.filter_by(key=key).first()
+        user = get_authenticated_user()
+        secret = Secret.query.filter_by(
+            key=key, user_id=user.id).first()
         if secret:
             return decrypt(secret.value)
         return None
@@ -27,8 +82,12 @@ def register_tools(app):
 
     with app.app_context():
         tools = []
-        # Fetch enabled tools from the database
-        enabled_tools = Tool.query.filter_by(enabled=True).all()
+        user = get_authenticated_user()
+        enabled_tools = Tool.query.filter(
+            (Tool.user_id == user.id, Tool.enabled ==
+             True, Tool.tool_type == 'private'),
+            or_(Tool.tool_type == 'common', Tool.enabled == True)
+        ).all()
 
         print(f"Registering {len(enabled_tools)} tools")
 
@@ -99,68 +158,3 @@ def upsert_embeddings(app, conversation_id, vectorstore, embedding_strings):
         vectorstore['client'].persist()
 
     return new_embeddings
-
-
-def normalize_string(str):
-    # Replace underscores with spaces
-    str = str.replace('_', ' ')
-
-    # Remove special characters except spaces, capitalize words
-    str = re.sub(r'[^a-zA-Z0-9 ]', '', str).title()
-
-    return str
-
-
-def to_snake_case(name):
-    name = name.strip().lower()
-    name = re.sub(r'\W+', ' ', name)  # Remove any special characters
-    name = name.replace(' ', '_')
-    return name
-
-
-def add_core_tool(app, tool_info):
-    with app.app_context():
-        # Check if the core tool already exists
-        core_tool = Tool.query.filter_by(name=tool_info["name"]).first()
-
-        # If the core tool does not exist, create it
-        if not core_tool:
-            # Construct the dynamic path to the tool definition script
-            base_path = os.path.dirname(os.path.abspath(__file__))
-            tool_definition_path = os.path.join(
-                base_path, tool_info["tool_definition_path"]
-            )
-
-            core_tool = Tool(
-                name=tool_info["name"],
-                enabled=tool_info["enabled"],
-                core=tool_info["core"],
-                tool_type=tool_info["tool_type"],
-                tool_definition_path=tool_definition_path,
-                manifest=tool_info.get("manifest"),
-                description=tool_info["description"],
-            )
-
-            db.session.add(core_tool)
-            db.session.commit()
-
-
-def add_secret_if_not_exists(app, secret_name, secret_value):
-    with app.app_context():
-        # Check if the secret already exists
-        secret = Secret.query.filter_by(key=secret_name).first()
-
-        # If the secret does not exist, create it
-        if not secret:
-            create_secret(secret_name, secret_value)
-
-            print(f"{secret_name} secret created with value '{secret_value}'")
-        else:
-            print(f"{secret_name} secret already exists")
-
-
-def cut_string(string, max_len):
-    if len(string) > max_len:
-        return string[:max_len]
-    else:
-        return string

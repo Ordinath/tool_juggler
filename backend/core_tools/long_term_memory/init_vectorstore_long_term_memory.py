@@ -2,12 +2,11 @@ import os
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
-
+from utils import get_vectorstore_persist_directory
 
 def init_vectorstore_long_term_memory(app):
-    current_file_path = os.path.dirname(os.path.abspath(__file__))
-    persist_directory = os.path.join(
-        current_file_path, '..', 'vectorstores', 'long_term_memory')
+    persist_directory = get_vectorstore_persist_directory(
+        app, 'private', 'long_term_memory')
 
     client = chromadb.Client(Settings(
         chroma_db_impl="duckdb+parquet",
@@ -24,3 +23,5 @@ def init_vectorstore_long_term_memory(app):
           collection.count())
 
     return {"client": client, "collection": collection}
+
+
