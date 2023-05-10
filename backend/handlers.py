@@ -4,7 +4,7 @@ from auth import get_authenticated_user
 
 def register_handlers(app):
 
-    app.secret_key = 'your-secret-key'
+    app.secret_key = app.config['SESSION_SECRET_KEY']
 
     @app.before_request
     def load_user():

@@ -14,6 +14,7 @@ import importlib.util
 import inspect
 from datetime import datetime
 from flask import g, current_app
+from auth import get_authenticated_user
 
 BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 
@@ -21,7 +22,8 @@ BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 class ToolProcessor:
     def __init__(self, file_path):
         self.app = current_app
-        self.user_id = g.user.id
+        self.user = get_authenticated_user()
+        self.user_id = self.user.id if self.user else None
         self.file_path = Path(file_path)
         self.temp_folder = BASE_DIR / 'temp_tools'
         self.manifest_data = None

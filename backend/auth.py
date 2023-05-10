@@ -8,7 +8,6 @@ def get_authenticated_user():
 
     # this should work on register and login routes to initate all required tools for user
     user_id = session.get('user_id')
-    print('session user_id: ', user_id)
     if user_id is not None:
         user = User.query.get(user_id)
         return user

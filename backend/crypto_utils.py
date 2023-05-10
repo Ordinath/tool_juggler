@@ -14,6 +14,13 @@ if not jwt_secret_key:
     set_key('.env', 'JWT_SECRET_KEY', jwt_secret_key)
     os.environ['JWT_SECRET_KEY'] = jwt_secret_key
 
+# session secret key encryption
+session_secret_key = os.environ.get('SESSION_SECRET_KEY')
+if not session_secret_key:
+    session_secret_key = os.urandom(24).hex()
+    set_key('.env', 'SESSION_SECRET_KEY', session_secret_key)
+    os.environ['SESSION_SECRET_KEY'] = session_secret_key
+
 
 # db encryption
 encryption_key = os.environ.get('ENCRYPTION_KEY')

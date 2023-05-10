@@ -29,8 +29,9 @@ def to_snake_case(name):
 
 def add_secret_if_not_exists(app, secret_name, secret_value):
     with app.app_context():
+        user = get_authenticated_user()
         # Check if the secret already exists
-        secret = Secret.query.filter_by(key=secret_name).first()
+        secret = Secret.query.filter_by(key=secret_name, user_id=user.id).first()
 
         # If the secret does not exist, create it
         if not secret:

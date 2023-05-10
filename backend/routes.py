@@ -16,22 +16,23 @@ from functools import wraps
 from werkzeug.exceptions import HTTPException
 from crypto_utils import encrypt, decrypt
 from functools import wraps
+from auth import get_authenticated_user
 from vectorstores import register_vectorstores
 from utils import add_secret_if_not_exists
 # from core_tools import long_term_memory_tool
 # app.config['UPLOAD_FOLDER'] = 'path/to/your/upload/directory'
-
+# imports
 
 def register_routes(app):
     @app.route('/conversations', methods=['GET', 'POST'])
     @require_auth
     def conversations():
-
+        user = get_authenticated_user()
         if request.method == 'POST':
             data = request.json
             new_conversation = Conversation(title=data['title'],
                                             model=data.get('model'),
-                                            user_id=g.user.id)
+                                            user_id=user.id)
             db.session.add(new_conversation)
             db.session.commit()
             return jsonify({
@@ -39,7 +40,7 @@ def register_routes(app):
                 "title": new_conversation.title
             }), 201
 
-        conversations = Conversation.query.filter_by(user_id=g.user.id).all()
+        conversations = Conversation.query.filter_by(user_id=user.id).all()
         return jsonify([{
             "id": conv.id,
             "title": conv.title,
@@ -52,7 +53,8 @@ def register_routes(app):
 
         conv = Conversation.query.get_or_404(conversation_id)
 
-        if conv.user_id != g.user.id:
+        user = get_authenticated_user()
+        if conv.user_id != user.id:
             return jsonify({"error": "Unauthorized access to the conversation."}), 403
 
         if request.method == 'PUT':
@@ -100,10 +102,11 @@ def register_routes(app):
     @app.route('/conversations/<string:conversation_id>/messages', methods=['POST'])
     @require_auth
     def add_message(conversation_id):
-
+        
+        user = get_authenticated_user()
         conv = Conversation.query.get_or_404(conversation_id)
 
-        if conv.user_id != g.user.id:
+        if conv.user_id != user.id:
             return jsonify({"error": "Unauthorized access to the conversation."}), 403
 
         data = request.json
@@ -119,10 +122,11 @@ def register_routes(app):
     @require_auth
     def message(message_id):
 
+        user = get_authenticated_user()
         msg = Message.query.get_or_404(message_id)
         conv = Conversation.query.get_or_404(msg.conversation_id)
 
-        if conv.user_id != g.user.id:
+        if conv.user_id != user.id:
             return jsonify({"error": "Unauthorized access to the conversation."}), 403
 
         if request.method == 'PUT':
@@ -146,13 +150,14 @@ def register_routes(app):
     @require_auth
     def get_ai_completion(conversation_id):
 
+        user = get_authenticated_user()
         data = request.json
         assistant_message_id = data.get('assistant_message_id', None)
 
         model = data.get('model', None)
         conv = Conversation.query.get_or_404(conversation_id)
 
-        if conv.user_id != g.user.id:
+        if conv.user_id != user.id:
             return jsonify({"error": "Unauthorized access to the conversation."}), 403
 
         last_assistant_message = conv.messages[-1].content
@@ -187,9 +192,10 @@ def register_routes(app):
     @require_auth
     def upsert_long_term_memory_embedding(conversation_id):
 
+        user = get_authenticated_user()
         conv = Conversation.query.get_or_404(conversation_id)
 
-        if conv.user_id != g.user.id:
+        if conv.user_id != user.id:
             return jsonify({"error": "Unauthorized access to the conversation."}), 403
 
         messages_to_embed = ""
@@ -215,9 +221,10 @@ def register_routes(app):
     @require_auth
     def delete_long_term_memory_embedding(conversation_id):
 
+        user = get_authenticated_user()
         conv = Conversation.query.get_or_404(conversation_id)
 
-        if conv.user_id != g.user.id:
+        if conv.user_id != user.id:
             return jsonify({"error": "Unauthorized access to the conversation."}), 403
 
         # Set the embedded flag to False for the conversation
@@ -269,7 +276,8 @@ def register_routes(app):
     @require_auth
     def get_tools():
 
-        tools = Tool.query.filter_by(user_id=g.user.id).all()
+        user = get_authenticated_user()
+        tools = Tool.query.filter_by(user_id=user.id).all()
         return jsonify([{
             "id": tool.id,
             "name": tool.name,
@@ -286,9 +294,10 @@ def register_routes(app):
     @require_auth
     def toggle_tool(tool_id):
 
+        user = get_authenticated_user()
         tool = Tool.query.get_or_404(tool_id)
 
-        if tool.user_id != g.user.id:
+        if tool.user_id != user.id:
             return jsonify({"error": "Unauthorized access to the tool."}), 403
 
         data = request.json
@@ -311,9 +320,10 @@ def register_routes(app):
     @require_auth
     def delete_tool(tool_id):
 
+        user = get_authenticated_user()
         tool = Tool.query.get_or_404(tool_id)
 
-        if tool.user_id != g.user.id:
+        if tool.user_id != user.id:
             return jsonify({"error": "Unauthorized access to the tool."}), 403
 
         try:
@@ -335,25 +345,27 @@ def register_routes(app):
     @require_auth
     def secrets():
 
+        user = get_authenticated_user()
         if request.method == 'POST':
             data = request.json
             encrypted_value = encrypt(data['value'])
             new_secret = Secret(
-                key=data['key'], value=encrypted_value, user_id=g.user.id)
+                key=data['key'], value=encrypted_value, user_id=user.id)
             db.session.add(new_secret)
             db.session.commit()
             return jsonify({"id": new_secret.id, "key": new_secret.key}), 201
 
-        secrets = Secret.query.filter_by(user_id=g.user.id).all()
+        secrets = Secret.query.filter_by(user_id=user.id).all()
         return jsonify([{"id": secret.id, "key": secret.key, "value": decrypt(secret.value)} for secret in secrets])
 
     @app.route('/secrets/<string:secret_id>', methods=['GET', 'PUT', 'DELETE'])
     @require_auth
     def secret(secret_id):
 
+        user = get_authenticated_user()
         secret = Secret.query.get_or_404(secret_id)
 
-        if secret.user_id != g.user.id:
+        if secret.user_id != user.id:
             return jsonify({"error": "Unauthorized access to the secret."}), 403
 
         if request.method == 'GET':
@@ -389,9 +401,11 @@ def register_routes(app):
 
         # Set the user to newly created user for the current request to proceed with initialization
         session['user_id'] = new_user.id
+        print('register set session user_id: ', session['user_id'])
         initialize_core_tools()
         add_secret_if_not_exists(app, "OPENAI_API_KEY", "TO_BE_PROVIDED")
         session.pop('user_id', None)
+        # print('register pop session user_id: ', session['user_id'])
 
         return jsonify({"message": "User registered successfully"}), 201
 
@@ -414,9 +428,11 @@ def register_routes(app):
 
         # we initiate the app for logged in user
         session['user_id'] = user.id
+        print('login set session user_id: ', session['user_id'])
         register_vectorstores(app)
         print(app.vectorstores)
         session.pop('user_id', None)
+        # print('login pop session user_id: ', session['user_id'])
 
         return jsonify({"token": token})
 
